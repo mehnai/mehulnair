@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Resume - Mehul Nair</title>
+    <!-- Meta tags for responsive design -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Link to CSS -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- Link to 'Roboto Mono' font -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav>
+        <div class="logo">Mehul Nair</div>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="resume.html" class="active">Resume</a></li>
+        </ul>
+    </nav>
+    
+    <header class="resume-header">
+        <h1>Mehul Nair</h1>
+        <div class="contact-info">
+            <a href="tel:510-974-6768">510-974-6768</a> |
+            <a href="mailto:mehulnair2005@gmail.com">mehulnair2005@gmail.com</a> |
+            <a href="https://linkedin.com/in/mehnai" target="_blank">LinkedIn</a>
+        </div>
+    </header>
+    
+    <main>
+        <!-- Education Section -->
+        <section id="education">
+            <h2>Education</h2>
+            <div class="section-content">
+                <div class="item">
+                    <h3>University of California Berkeley</h3>
+                    <p><em>August 2022 - May 2026</em></p>
+                    <p>B.S. Materials Science and Engineering &amp; Nuclear Engineering</p>
+                    <p><strong>GPA:</strong> 3.7</p>
+                    <p><strong>Activities and Societies:</strong> IEEE Indrel Officer, ANS Research Coordinator, Net Impact Berkeley, MSEA</p>
+                    <p><strong>Relevant Coursework:</strong></p>
+                    <ul class="courses">
+                        <li>Thin-Film Materials Science</li>
+                        <li>Engineering Thermodynamics</li>
+                        <li>Mechanical Behavior of Materials</li>
+                        <li>Materials Characterization</li>
+                        <li>Advanced Modeling of Manufacturing Processes</li>
+                        <li>Statics and Mechanics of Materials</li>
+                        <li>Nuclear Reactions</li>
+                        <li>Bonding, Crystallography and Defects</li>
+                        <li>Controlled Fusion</li>
+                        <li>Modern Physics</li>
+                        <li>Properties of Materials</li>
+                        <li>Electricity and Magnetism</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Experience Section -->
+        <section id="experience">
+            <h2>Experience</h2>
+            <div class="section-content">
+                <div class="tab-container">
+                    <div class="tab-buttons">
+                        <button class="tab-button active" onclick="openTab(event, 'technical')">Technical Experience</button>
+                        <button class="tab-button" onclick="openTab(event, 'management')">Management Experience</button>
+                    </div>
+                    <div class="tab-content">
+                        <!-- Technical Experience -->
+                        <div id="technical" class="tab-pane active">
+                            <!-- Superconducting Magnet Program, LBNL -->
+                            <div class="item">
+                                <h4>Superconducting Magnet Program, LBNL</h4>
+                                <p><em>Student Researcher</em> | <em>October 2023 – Present, Berkeley, CA</em></p>
+                                <ul>
+                                    <li>Created a quench detection system using LabView FPGA.</li>
+                                    <li>Developing machine-level denoising of voltage data.</li>
+                                </ul>
+                            </div>
+                            <!-- Center for Complex and Active Materials, Pan Group -->
+                            <div class="item">
+                                <h4>Center for Complex and Active Materials, Pan Group</h4>
+                                <p><em>Student Researcher</em> | <em>June 2024 – August 2024, Irvine, CA</em></p>
+                                <ul>
+                                    <li>Utilized STEM imaging to study ferroelectric interfaces.</li>
+                                    <li>Developed Python code to refine atomic positions.</li>
+                                </ul>
+                            </div>
+                            <!-- Nuclear Materials Lab, UC Berkeley -->
+                            <div class="item">
+                                <h4>Nuclear Materials Lab, UC Berkeley</h4>
+                                <p><em>Undergraduate Research Assistant</em> | <em>September 2022 – September 2024, Berkeley, CA</em></p>
+                                <ul>
+                                    <li>Conducted SEM, EBSD, and tensile testing on steel.</li>
+                                    <li>Studied radiation effects on fusion materials.</li>
+                                </ul>
+                            </div>
+                            <!-- Radiation Safety Committee -->
+                            <div class="item">
+                                <h4>Radiation Safety Committee, UC Berkeley</h4>
+                                <p><em>Undergraduate Student Representative</em> | <em>June 2023 – Present, Berkeley, CA</em></p>
+                                <ul>
+                                    <li>Advised EH&amp;S staff on radiation safety programs.</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Management Experience -->
+                        <div id="management" class="tab-pane">
+                            <!-- Goodwater Capital -->
+                            <div class="item">
+                                <h4>Goodwater Capital</h4>
+                                <p><em>Student Consultant</em> | <em>August 2024 – Present, Berkeley, CA</em></p>
+                                <ul>
+                                    <li>Conducted market analysis across nine global regions, identifying trends and growth opportunities.</li>
+                                    <li>Processed data for 15 key metrics, creating regional plans.</li>
+                                    <li>Created visualizations to identify strategic investment opportunities.</li>
+                                </ul>
+                            </div>
+                            
+                            <!-- Climeworks -->
+                            <div class="item">
+                                <h4>Climeworks</h4>
+                                <p><em>Student Consultant</em> | <em>January 2024 – May 2024, Berkeley, CA</em></p>
+                                <ul>
+                                    <li>Analyzed market expansion possibilities for the Carbon Dioxide Removal (CDR) market.</li>
+                                    <li>Managed top 100 Salesforce accounts, assessing CDR adoption.</li>
+                                    <li>Developed strategic sales decision frameworks.</li>
+                                </ul>
+                            </div>
+                            
+                            <!-- Kiss The Ground -->
+                            <div class="item">
+                                <h4>Kiss The Ground</h4>
+                                <p><em>Student Consultant</em> | <em>August 2023 – December 2023, Berkeley, CA</em></p>
+                                <ul>
+                                    <li>Refined a B2B model to scale penetration in the EdTech market.</li>
+                                    <li>Developed go-to-market strategies using case studies.</li>
+                                    <li>Redesigned the website using interactive Figma prototypes.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Publications Section -->
+        <section id="publications">
+            <h2>Publications and Presentations</h2>
+            <div class="section-content">
+                <div class="publication-list">
+                    <div class="publication-item">
+                        <a href="https://ieeexplore.ieee.org/document/10029975" target="_blank">
+                            Investigating Irradiated Superconducting Magnet Insulation Materials for Particle Accelerators
+                        </a>
+                    </div>
+                    <div class="publication-item">
+                        <a href="#" target="_blank">
+                            Smart Quench Management System Based on Fast Low-Level Voltage Measurements for HTS Magnets
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Skills Section -->
+        <section id="skills">
+            <h2>Technical Skills</h2>
+            <div class="section-content">
+                <div class="skills-grid">
+                    <div class="skill-category">
+                        <h3>Software</h3>
+                        <p>Microsoft Office, Figma, Canva, Python, Data Analysis, Research, Data Acquisition</p>
+                    </div>
+                    <div class="skill-category">
+                        <h3>Technical</h3>
+                        <p>SEM, Sample Preparation, Mechanical Testing, EDS, EBSD, TEM Sample Preparation, X-Ray Diffraction, STEM</p>
+                    </div>
+                    <div class="skill-category">
+                        <h3>Other</h3>
+                        <p>Organizational Skills, Teamwork, Leadership, Interpersonal Skills</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Include JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,559 @@
+/* Import 'Roboto Mono' font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
+
+/* Import 'Ailerons' font */
+@font-face {
+    font-family: 'Ailerons';
+    src: url('Fonts/Ailerons-Typeface.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Basic Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body Styling */
+body {
+    font-family: 'Roboto Mono', monospace;
+    color: #000;
+    background-color: #fff;
+    line-height: 1.6;
+    scroll-behavior: smooth;
+    min-height: 100vh; /* Ensure body takes full viewport height */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Navigation Bar */
+nav {
+    background-color: #1a1a1a;
+    padding: 15px 30px;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    border-bottom: 1px solid #333;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    animation: slideDown 0.5s ease-out;
+}
+
+nav .logo {
+    font-family: 'Ailerons', sans-serif;
+    font-size: 24px;
+    font-weight: normal;
+    letter-spacing: 1px;
+    color: #fff;
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    align-items: center;
+}
+
+nav li {
+    margin-left: 25px;
+}
+
+nav a {
+    text-decoration: none;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+nav a.active,
+nav a:hover {
+    color: #555;
+}
+
+/* Loading Screen */
+#loading-screen {
+    position: fixed;
+    top: 60px; /* Height of the nav bar */
+    left: 0;
+    width: 100%;
+    height: calc(100vh - 60px);
+    background-color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    z-index: 999;
+    animation: fadeOut 1s ease-out forwards;
+    animation-delay: 2.5s; /* Duration of the loading */
+}
+
+#loading-screen .loading-content h2 {
+    color: #000;
+    font-size: 24px;
+    margin-bottom: 20px;
+    animation: typing 2s steps(20) 0.5s forwards;
+    white-space: nowrap;
+    overflow: hidden;
+    border-right: 2px solid #000;
+}
+
+.progress-bar {
+    width: 80%;
+    height: 25px; /* Rectangle look */
+    background-color: #ccc;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.progress {
+    width: 0%;
+    height: 100%;
+    background-color: #000;
+    animation: loadProgress 2s linear forwards;
+}
+
+@keyframes loadProgress {
+    from { width: 0%; }
+    to { width: 100%; }
+}
+
+@keyframes fadeOut {
+    to {
+        opacity: 0;
+        visibility: hidden;
+    }
+}
+
+@keyframes typing {
+    from { width: 0; }
+    to { width: 100%; }
+}
+
+/* Terminal Container */
+#terminal-container.hidden {
+    display: none;
+}
+
+#terminal {
+    background-color: #ffffff; /* White background */
+    color: #000000; /* Black text */
+    width: 100%;
+    height: calc(100vh - 60px);
+    padding: 20px;
+    font-size: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+#terminal #output {
+    flex: 1;
+    white-space: pre-wrap;
+    overflow-y: auto;
+}
+
+#terminal #input-line {
+    display: flex;
+    align-items: center;
+    position: relative; /* For autocomplete positioning */
+}
+
+#terminal .prompt {
+    color: #000;
+    margin-right: 10px;
+}
+
+#terminal #command-input {
+    background-color: #f5f5f5;
+    border: 1px solid #ccc;
+    padding: 5px 10px;
+    border-radius: 4px;
+    flex: 1;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 16px;
+}
+
+/* Autocomplete Suggestions */
+.autocomplete-suggestions {
+    position: absolute;
+    bottom: 100%; /* Position above the input line */
+    left: 0;
+    right: 0;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-bottom: none;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 1001;
+    box-shadow: 0px -4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 5px 5px 0 0;
+}
+
+.autocomplete-suggestion {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.autocomplete-suggestion:hover,
+.autocomplete-suggestion.active {
+    background-color: #e0e0e0;
+}
+
+/* About Me Widget */
+.about-me-widget {
+    border: 1px solid #ccc;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.about-me-widget img {
+    width: 200px; /* Larger image */
+    height: 200px;
+    border-radius: 50%;
+    margin-right: 20px;
+    object-fit: cover;
+}
+
+.about-me-widget .about-text {
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+/* Resume Header */
+.resume-header {
+    text-align: center;
+    padding: 120px 20px 60px 20px; /* Adjust padding for fixed nav */
+    background-color: #f9f9f9;
+    animation: fadeIn 1s ease-in-out;
+}
+
+.resume-header h1 {
+    font-family: 'Ailerons', sans-serif;
+    font-size: 48px;
+    margin-bottom: 10px;
+    animation: fadeInUp 1s ease-in-out;
+}
+
+.resume-header .contact-info {
+    font-size: 18px;
+    color: #666;
+    margin-top: 10px;
+    animation: fadeIn 1s ease-in-out 0.5s both;
+}
+
+.resume-header .contact-info a {
+    color: #000;
+    text-decoration: none;
+    margin: 0 10px;
+    transition: color 0.3s;
+}
+
+.resume-header .contact-info a:hover {
+    color: #555;
+}
+
+/* Main Content */
+main {
+    padding: 50px 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+    animation: fadeIn 1s ease-in-out;
+    flex: 1; /* Allow main to grow and push footer to bottom */
+}
+
+/* Section Titles */
+section h2 {
+    font-size: 32px;
+    margin-bottom: 30px;
+    text-align: center;
+    position: relative;
+    font-family: 'Ailerons', sans-serif;
+    animation: fadeInDown 1s ease-in-out;
+}
+
+/* Section Content */
+.section-content .item {
+    margin-bottom: 40px;
+}
+
+.item h3, .item h4 {
+    font-size: 24px;
+    margin-bottom: 5px;
+    font-weight: 700;
+}
+
+.item p {
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.item ul {
+    list-style-type: disc;
+    padding-left: 20px;
+}
+
+.item ul li {
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+
+/* Courses List */
+.courses {
+    list-style-type: circle;
+    padding-left: 20px;
+    columns: 2;
+}
+
+.courses li {
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+
+/* Experience Section */
+.tab-container {
+    width: 100%;
+}
+
+.tab-buttons {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.tab-button {
+    background-color: #f9f9f9;
+    border: none;
+    padding: 15px 25px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    transition: background-color 0.3s, color 0.3s;
+    border-bottom: 3px solid transparent;
+    outline: none;
+}
+
+.tab-button:hover {
+    background-color: #e0e0e0;
+}
+
+.tab-button.active {
+    background-color: #fff;
+    border-bottom: 3px solid #000;
+    color: #000;
+}
+
+.tab-content .tab-pane {
+    display: none;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.tab-content .tab-pane.active {
+    display: block;
+}
+
+/* Publications Section */
+.publication-list {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.publication-item {
+    width: 100%;
+    max-width: 800px;
+    margin-bottom: 20px;
+}
+
+.publication-item a {
+    text-decoration: none;
+    font-size: 18px;
+    color: #000;
+    border: 1px solid #000;
+    padding: 15px 20px;
+    display: block;
+    text-align: center;
+    border-radius: 5px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.publication-item a:hover {
+    background-color: #000;
+    color: #fff;
+}
+
+/* Skills Section */
+.skills-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.skill-category {
+    width: 30%;
+    margin-bottom: 20px;
+}
+
+.skill-category h3 {
+    font-size: 20px;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.skill-category p {
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Responsive Styles */
+@media (max-width: 900px) {
+    .skills-grid {
+        flex-direction: column;
+    }
+    .skill-category {
+        width: 45%;
+    }
+}
+
+@media (max-width: 768px) {
+    .skills-grid {
+        flex-direction: column;
+    }
+    .skill-category {
+        width: 100%;
+    }
+
+    nav ul {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    nav li {
+        margin-left: 0;
+        margin-top: 10px;
+    }
+
+    .tab-buttons {
+        flex-direction: column;
+    }
+
+    .tab-button {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+
+    .about-me-widget {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .about-me-widget img {
+        margin-right: 0;
+        margin-bottom: 15px;
+    }
+}
+
+@media (max-width: 600px) {
+    nav .logo {
+        font-size: 20px;
+    }
+
+    .resume-header h1 {
+        font-size: 36px;
+    }
+
+    section h2 {
+        font-size: 28px;
+    }
+
+    .item h3, .item h4 {
+        font-size: 20px;
+    }
+
+    .skills-grid {
+        flex-direction: column;
+    }
+
+    .skill-category {
+        width: 100%;
+    }
+
+    #loading-screen .loading-content h2 {
+        font-size: 20px;
+    }
+
+    #terminal #command-input {
+        font-size: 14px;
+    }
+
+    .about-me-widget {
+        padding: 15px;
+    }
+
+    .about-me-widget img {
+        width: 150px;
+        height: 150px;
+    }
+}
+
+/* Footer Styling (Optional) */
+/* If you have a footer, ensure it's styled appropriately or remove it if not needed */
+/*
+footer {
+    background-color: #1a1a1a;
+    color: #fff;
+    text-align: center;
+    padding: 20px;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+*/
