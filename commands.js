@@ -57,7 +57,6 @@ const commands = {
 University of California Berkeley
 B.S. Materials Science and Engineering & Nuclear Engineering
 August 2022 - May 2026
-GPA: 3.7
 Activities and Societies: IEEE Indrel Officer, ANS Research Coordinator, Net Impact Berkeley, MSEA
 
 Relevant Coursework:
