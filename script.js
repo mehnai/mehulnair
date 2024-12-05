@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Declare global variables
     let output = null;
-    let gameState = null;
+    window.gameState = null; // Make gameState globally accessible
 
     // Function to initialize the terminal
     function initializeTerminal() {
@@ -174,12 +174,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Append text or widgets to the terminal output
         function appendOutput(text) {
-            if (text.includes('<div class="about-me-widget">')) {
-                // Inject About Me Widget
-                const widgetDiv = document.createElement('div');
-                widgetDiv.innerHTML = text;
-                output.appendChild(widgetDiv);
+            if (typeof text !== 'string') return;
+
+            // Check if the response is HTML by looking for HTML tags
+            const isHTML = /<\/?[a-z][\s\S]*>/i.test(text.trim());
+
+            if (isHTML) {
+                // Create a temporary container to parse the HTML
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = text;
+
+                // Append each child to the output
+                Array.from(tempDiv.children).forEach(child => {
+                    output.appendChild(child);
+                });
             } else {
+                // Treat as plain text
                 const lines = text.split('\n');
                 lines.forEach(line => {
                     const lineElement = document.createElement('div');

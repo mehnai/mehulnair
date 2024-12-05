@@ -7,6 +7,7 @@
     src: url('Fonts/Ailerons-Typeface.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
+    font-display: swap; /* Improves loading performance */
 }
 
 /* Basic Reset */
@@ -70,7 +71,8 @@ nav a {
 }
 
 nav a.active,
-nav a:hover {
+nav a:hover,
+nav a:focus {
     color: #555;
 }
 
@@ -101,22 +103,6 @@ nav a:hover {
     white-space: nowrap;
     overflow: hidden;
     border-right: 2px solid #000;
-}
-
-/* Remove Progress Bar or Spinner Styles */
-/* Previously existing progress bar or spinner has been removed */
-
-/* Keyframes for animations */
-@keyframes fadeOut {
-    to {
-        opacity: 0;
-        visibility: hidden;
-    }
-}
-
-@keyframes typing {
-    from { width: 0; }
-    to { width: 100%; }
 }
 
 /* Terminal Container */
@@ -164,6 +150,11 @@ nav a:hover {
     font-size: 16px;
 }
 
+#terminal #command-input:focus {
+    outline: none;
+    border-color: #888;
+}
+
 /* Autocomplete Suggestions */
 .autocomplete-suggestions {
     position: absolute;
@@ -188,6 +179,50 @@ nav a:hover {
 .autocomplete-suggestion:hover,
 .autocomplete-suggestion.active {
     background-color: #e0e0e0;
+}
+
+/* Experience Widget */
+.experience-widget {
+    border: 1px solid #ccc;
+    padding: 20px; /* Increased padding for better spacing */
+    margin: 16px 0;
+    border-radius: 10px; /* Slightly larger border-radius for a smoother look */
+    background-color: #f0f0f0; /* Lighter background for better contrast */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition effects */
+}
+
+.experience-widget:hover {
+    transform: translateY(-5px); /* Slight lift on hover for interactivity */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Enhanced shadow on hover */
+}
+
+/* Experience Title */
+.experience-title {
+    font-family: 'Ailerons', sans-serif; /* Apply 'Ailerons' font */
+    font-size: 1.8em; /* Increased font size for prominence */
+    margin-bottom: 12px; /* Additional spacing below the title */
+    color: #333; /* Darker color for better readability */
+    text-transform: uppercase; /* Optional: Make titles uppercase for emphasis */
+}
+
+/* Experience Summary */
+.experience-summary {
+    font-style: italic;
+    margin-bottom: 12px;
+    color: #555; /* Slightly lighter color for the summary */
+}
+
+/* Experience Details */
+.experience-details {
+    list-style-type: disc;
+    padding-left: 25px; /* Increased padding for better alignment */
+    color: #444; /* Consistent text color */
+}
+
+.experience-details li {
+    margin-bottom: 8px;
+    line-height: 1.5; /* Improved readability */
 }
 
 /* About Me Widget */
@@ -243,7 +278,8 @@ nav a:hover {
     transition: color 0.3s;
 }
 
-.resume-header .contact-info a:hover {
+.resume-header .contact-info a:hover,
+.resume-header .contact-info a:focus {
     color: #555;
 }
 
@@ -271,7 +307,8 @@ section h2 {
     margin-bottom: 40px;
 }
 
-.item h3, .item h4 {
+.item h3,
+.item h4 {
     font-size: 24px;
     margin-bottom: 5px;
     font-weight: 700;
@@ -313,6 +350,7 @@ section h2 {
     display: flex;
     justify-content: center;
     margin-bottom: 20px;
+    flex-wrap: wrap; /* Allows buttons to wrap on smaller screens */
 }
 
 .tab-button {
@@ -325,9 +363,11 @@ section h2 {
     transition: background-color 0.3s, color 0.3s;
     border-bottom: 3px solid transparent;
     outline: none;
+    margin: 5px; /* Adds spacing between buttons when wrapped */
 }
 
-.tab-button:hover {
+.tab-button:hover,
+.tab-button:focus {
     background-color: #e0e0e0;
 }
 
@@ -371,7 +411,8 @@ section h2 {
     transition: background-color 0.3s, color 0.3s;
 }
 
-.publication-item a:hover {
+.publication-item a:hover,
+.publication-item a:focus {
     background-color: #000;
     color: #fff;
 }
@@ -438,6 +479,18 @@ section h2 {
     }
 }
 
+@keyframes typing {
+    from { width: 0; }
+    to { width: 100%; }
+}
+
+@keyframes fadeOut {
+    to {
+        opacity: 0;
+        visibility: hidden;
+    }
+}
+
 /* Responsive Styles */
 @media (max-width: 900px) {
     .skills-grid {
@@ -499,7 +552,8 @@ section h2 {
         font-size: 28px;
     }
 
-    .item h3, .item h4 {
+    .item h3,
+    .item h4 {
         font-size: 20px;
     }
 
@@ -530,7 +584,7 @@ section h2 {
 }
 
 /* Footer Styling (Optional) */
-/* If you have a footer, ensure it's styled appropriately or remove it if not needed */
+/* Uncomment and style if you have a footer */
 /*
 footer {
     background-color: #1a1a1a;

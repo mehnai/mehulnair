@@ -12,6 +12,17 @@ function createAboutMeWidget() {
 </div>`;
 }
 
+function createExperienceWidget(title, summary, details) {
+    return `
+<div class="experience-widget">
+    <div class="experience-title"><strong>${title}</strong></div>
+    <div class="experience-summary">${summary}</div>
+    <ul class="experience-details">
+        ${details.map(detail => `<li>${detail}</li>`).join('')}
+    </ul>
+</div>`;
+}
+
 const commands = {
     help: {
         description: "List available commands",
@@ -252,78 +263,102 @@ Enter your guess using the 'guess [number]' command.`;
     'Goodwater Capital': {
         description: "Show Goodwater Capital experience",
         action: function() {
-            return `Goodwater Capital:
-Student Consultant | August 2024 – Present, Berkeley, CA
-- Conducted market analysis across nine global regions, identifying trends and growth opportunities.
-- Processed data for 15 key metrics, creating regional plans.
-- Created visualizations to identify strategic investment opportunities.`;
+            const title = "Goodwater Capital";
+            const summary = "Student Consultant at Goodwater Capital, where I conduct market analysis and identify strategic investment opportunities.";
+            const details = [
+                "Conducted market analysis across nine global regions, identifying trends and growth opportunities.",
+                "Processed data for 15 key metrics, creating regional plans.",
+                "Created visualizations to identify strategic investment opportunities."
+            ];
+            return createExperienceWidget(title, summary, details);
         }
     },
     'Climeworks': {
         description: "Show Climeworks experience",
         action: function() {
-            return `Climeworks:
-Student Consultant | January 2024 – May 2024, Berkeley, CA
-- Analyzed market expansion possibilities for the Carbon Dioxide Removal (CDR) market.
-- Managed top 100 Salesforce accounts, assessing CDR adoption.
-- Developed strategic sales decision frameworks.`;
+            const title = "Climeworks";
+            const summary = "Student Consultant at Climeworks, focusing on market expansion for Carbon Dioxide Removal (CDR) technologies.";
+            const details = [
+                "Analyzed market expansion possibilities for the Carbon Dioxide Removal (CDR) market.",
+                "Managed top 100 Salesforce accounts, assessing CDR adoption.",
+                "Developed strategic sales decision frameworks."
+            ];
+            return createExperienceWidget(title, summary, details);
         }
     },
     'Kiss The Ground': {
         description: "Show Kiss The Ground experience",
         action: function() {
-            return `Kiss The Ground:
-Student Consultant | August 2023 – December 2023, Berkeley, CA
-- Refined a B2B model to scale penetration in the EdTech market.
-- Developed go-to-market strategies using case studies.
-- Redesigned the website using interactive Figma prototypes.`;
+            const title = "Kiss The Ground";
+            const summary = "Student Consultant at Kiss The Ground, refining B2B models and developing go-to-market strategies in the EdTech sector.";
+            const details = [
+                "Refined a B2B model to scale penetration in the EdTech market.",
+                "Developed go-to-market strategies using case studies.",
+                "Redesigned the website using interactive Figma prototypes."
+            ];
+            return createExperienceWidget(title, summary, details);
         }
     },
     // Science experiences
     'Superconducting Magnet Program': {
         description: "Show Superconducting Magnet Program experience",
         action: function() {
-            return `Superconducting Magnet Program, LBNL:
-Student Researcher | October 2023 – Present, Berkeley, CA
-- Created a quench detection system using LabView FPGA which beat current system sensitivity by 1000 times.
-- Developing machine-level denoising of voltage data to detect quench seconds before it starts.`;
+            const title = "Superconducting Magnet Program, LBNL";
+            const summary = "Student Researcher working on quench detection systems and machine-level data denoising for superconducting magnets.";
+            const details = [
+                "Created a quench detection system using LabView FPGA which beat current system sensitivity by 1000 times.",
+                "Developing machine-level denoising of voltage data to detect quench seconds before it starts."
+            ];
+            return createExperienceWidget(title, summary, details);
         }
     },
     'Center for Complex and Active Materials': {
         description: "Show Center for Complex and Active Materials experience",
         action: function() {
-            return `Center for Complex and Active Materials, Pan Group:
-Student Researcher | June 2024 – August 2024, Irvine, CA
-- Utilized STEM imaging techniques to image ferroelectric interfaces at atomic resolution.
-- Developed Python code to refine atomic positions in charge density maps using image processing methods.`;
+            const title = "Center for Complex and Active Materials, Pan Group";
+            const summary = "Student Researcher utilizing STEM imaging techniques for atomic resolution studies of ferroelectric interfaces.";
+            const details = [
+                "Utilized STEM imaging techniques to image ferroelectric interfaces at atomic resolution.",
+                "Developed Python code to refine atomic positions in charge density maps using image processing methods."
+            ];
+            return createExperienceWidget(title, summary, details);
         }
     },
     'Applied Nuclear Physics Division': {
         description: "Show Applied Nuclear Physics Division experience",
         action: function() {
-            return `Applied Nuclear Physics Division, LBNL:
-Research Affiliate | March 2023 – March 2024, Berkeley, CA
-- Tested novel image reconstruction algorithms for low-noise near-field imaging in medical settings.
-- Utilized Python and statistical models including MLEM and LBFGS for image reconstruction.
-- Developed fitting algorithms identifying peaks of radiation spectra for detector characterization.`;
+            const title = "Applied Nuclear Physics Division, LBNL";
+            const summary = "Research Affiliate testing image reconstruction algorithms for medical imaging and radiation spectra analysis.";
+            const details = [
+                "Tested novel image reconstruction algorithms for low-noise near-field imaging in medical settings.",
+                "Utilized Python and statistical models including MLEM and LBFGS for image reconstruction.",
+                "Developed fitting algorithms identifying peaks of radiation spectra for detector characterization."
+            ];
+            return createExperienceWidget(title, summary, details);
         }
     },
     'Nuclear Materials Lab': {
         description: "Show Nuclear Materials Lab experience",
         action: function() {
-            return `Nuclear Materials Lab, UC Berkeley:
-Undergraduate Research Assistant | September 2022 – September 2024, Berkeley, CA
-- Conducted SEM, EBSD, and tensile testing on additive manufactured steel for microstructure characterization.
-- Studied radiation effects on fusion materials in conjunction with the Superconducting Magnet Program at LBNL.
-- Conducted mechanical properties testing on epoxies used for superconducting accelerator magnets.`;
+            const title = "Nuclear Materials Lab, UC Berkeley";
+            const summary = "Undergraduate Research Assistant conducting material characterization and studying radiation effects on fusion materials.";
+            const details = [
+                "Conducted SEM, EBSD, and tensile testing on additive manufactured steel for microstructure characterization.",
+                "Studied radiation effects on fusion materials in conjunction with the Superconducting Magnet Program at LBNL.",
+                "Conducted mechanical properties testing on epoxies used for superconducting accelerator magnets."
+            ];
+            return createExperienceWidget(title, summary, details);
         }
     },
     'Radiation Safety Committee': {
         description: "Show Radiation Safety Committee experience",
         action: function() {
-            return `Radiation Safety Committee, UC Berkeley College of Engineering:
-Undergraduate Student Representative | June 2023 – Present, Berkeley, CA
-- Advised Environment, Health & Safety (EH&S) staff on radiation safety and radioactive waste programs.`;
+            const title = "Radiation Safety Committee, UC Berkeley College of Engineering";
+            const summary = "Undergraduate Student Representative advising on radiation safety and radioactive waste programs.";
+            const details = [
+                "Advised Environment, Health & Safety (EH&S) staff on radiation safety and radioactive waste programs."
+            ];
+            return createExperienceWidget(title, summary, details);
         }
     }
 };
