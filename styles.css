@@ -20,8 +20,8 @@
 /* Body Styling */
 body {
     font-family: 'Roboto Mono', monospace;
-    color: #000;
-    background-color: #fff;
+    color: #f0f0f0;
+    background-color: #121212;
     line-height: 1.6;
     scroll-behavior: smooth;
     min-height: 100vh; /* Ensure body takes full viewport height */
@@ -31,8 +31,8 @@ body {
 
 /* Navigation Bar */
 nav {
-    background-color: #1a1a1a;
-    padding: 15px 30px;
+    background-color: #1e1e1e;
+    padding: 1rem 2rem;
     position: fixed;
     top: 0;
     width: 100%;
@@ -42,12 +42,13 @@ nav {
     align-items: center;
     justify-content: space-between;
     animation: slideDown 0.5s ease-out;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 nav .logo {
     font-family: 'Ailerons', sans-serif;
-    font-size: 24px;
-    font-weight: normal;
+    font-size: 1.5rem;
+    font-weight: 700;
     letter-spacing: 1px;
     color: #fff;
 }
@@ -59,12 +60,12 @@ nav ul {
 }
 
 nav li {
-    margin-left: 25px;
+    margin-left: 1.5rem;
 }
 
 nav a {
     text-decoration: none;
-    color: #fff;
+    color: #f0f0f0;
     font-size: 16px;
     font-weight: 500;
     transition: color 0.3s;
@@ -73,36 +74,40 @@ nav a {
 nav a.active,
 nav a:hover,
 nav a:focus {
-    color: #555;
+    color: #00bcd4;
 }
 
 /* Loading Screen */
 #loading-screen {
     position: fixed;
-    top: 60px; /* Height of the nav bar */
+    top: 0;
     left: 0;
     width: 100%;
-    height: calc(100vh - 60px);
-    background-color: #fff;
+    height: 100%;
+    background-color: #121212;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-direction: column;
     z-index: 999;
-    animation: fadeOut 1s ease-out forwards;
-    animation-delay: 2.5s; /* Duration of the loading */
+    transition: opacity 0.5s ease-out;
 }
 
 #loading-screen .loading-content h2 {
-    color: #000;
+    color: #00bcd4;
     font-size: 20px; /* Decreased font size */
-    margin-bottom: 20px;
+    margin-bottom: 1rem;
     text-align: center; /* Center the text */
     font-family: 'Roboto', sans-serif; /* Cleaner font */
     animation: typing 2s steps(20) 0.5s forwards;
     white-space: nowrap;
     overflow: hidden;
-    border-right: 2px solid #000;
+    position: relative;
+}
+
+.loading-content h2::after {
+    content: "_";
+    animation: blink 1s infinite;
 }
 
 /* Terminal Container */
@@ -110,23 +115,37 @@ nav a:focus {
     display: none;
 }
 
+#terminal-container {
+    flex-grow: 1;
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    margin-top: 60px; /* Add margin to account for fixed navbar */
+}
+
 #terminal {
-    background-color: #ffffff; /* White background */
-    color: #000000; /* Black text */
+    background-color: rgba(30, 30, 30, 0.8); /* White background */
+    color: #f0f0f0; /* Text color should be light for dark background */
     width: 100%;
-    height: calc(100vh - 60px);
-    padding: 20px;
+    max-width: 800px;
+    height: 80vh;
+    padding: 1rem;
     font-size: 16px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     position: relative;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 #terminal #output {
     flex: 1;
     white-space: pre-wrap;
     overflow-y: auto;
+    margin-bottom: 1rem;
+    line-height: 1.5;
 }
 
 #terminal #input-line {
@@ -136,58 +155,73 @@ nav a:focus {
 }
 
 #terminal .prompt {
-    color: #000;
-    margin-right: 10px;
+    color: #00bcd4;
+    margin-right: 0.5rem;
 }
 
 #terminal #command-input {
-    background-color: #f5f5f5;
-    border: 1px solid #ccc;
-    padding: 5px 10px;
-    border-radius: 4px;
+    background-color: transparent;
+    border: none;
+    color: #f0f0f0;
+    padding: 5px 0;
     flex: 1;
     font-family: 'Roboto Mono', monospace;
     font-size: 16px;
+    caret-color: #f0f0f0;
+    outline: none;
 }
 
-#terminal #command-input:focus {
-    outline: none;
-    border-color: #888;
+/* Command responses */
+.response {
+    margin: 0.5rem 0;
+    padding-left: 1rem;
+}
+
+.error {
+    color: #ff5252;
+}
+
+.success {
+    color: #4caf50;
+}
+
+.highlight {
+    color: #00bcd4;
 }
 
 /* Autocomplete Suggestions */
-.autocomplete-suggestions {
+#autocomplete-list {
     position: absolute;
-    bottom: 100%; /* Position above the input line */
+    top: 100%; /* Position below the input line */
     left: 0;
     right: 0;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    border-bottom: none;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
     max-height: 150px;
     overflow-y: auto;
     z-index: 1001;
-    box-shadow: 0px -4px 6px rgba(0, 0, 0, 0.1);
-    border-radius: 5px 5px 0 0;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 0 0 5px 5px;
+    display: none;
 }
 
-.autocomplete-suggestion {
-    padding: 8px 12px;
+.suggestion {
+    padding: 0.5rem 1rem;
     cursor: pointer;
 }
 
-.autocomplete-suggestion:hover,
-.autocomplete-suggestion.active {
-    background-color: #e0e0e0;
+.suggestion:hover,
+.suggestion.active {
+    background-color: #3a3a3a;
 }
 
 /* Experience Widget */
 .experience-widget {
-    border: 1px solid #ccc;
+    border: 1px solid #444;
     padding: 20px; /* Increased padding for better spacing */
     margin: 16px 0;
     border-radius: 10px; /* Slightly larger border-radius for a smoother look */
-    background-color: #f0f0f0; /* Lighter background for better contrast */
+    background-color: #2a2a2a; /* Lighter background for better contrast */
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
     transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition effects */
 }
@@ -199,25 +233,24 @@ nav a:focus {
 
 /* Experience Title */
 .experience-title {
-    font-family: 'Ailerons', sans-serif; /* Apply 'Ailerons' font */
+    font-family: 'Roboto Mono', sans-serif; /* Apply 'Ailerons' font */
     font-size: 1.8em; /* Increased font size for prominence */
     margin-bottom: 12px; /* Additional spacing below the title */
-    color: #333; /* Darker color for better readability */
-    text-transform: uppercase; /* Optional: Make titles uppercase for emphasis */
+    color: #f0f0f0; /* Darker color for better readability */
 }
 
 /* Experience Summary */
 .experience-summary {
     font-style: italic;
     margin-bottom: 12px;
-    color: #555; /* Slightly lighter color for the summary */
+    color: #ccc; /* Slightly lighter color for the summary */
 }
 
 /* Experience Details */
 .experience-details {
     list-style-type: disc;
     padding-left: 25px; /* Increased padding for better alignment */
-    color: #444; /* Consistent text color */
+    color: #f0f0f0; /* Consistent text color */
 }
 
 .experience-details li {
@@ -227,13 +260,13 @@ nav a:focus {
 
 /* About Me Widget */
 .about-me-widget {
-    border: 1px solid #ccc;
+    border: 1px solid #444;
     padding: 20px;
     display: flex;
     align-items: center;
     margin-top: 20px;
     border-radius: 8px;
-    background-color: #f9f9f9;
+    background-color: #2a2a2a;
 }
 
 .about-me-widget img {
@@ -247,13 +280,14 @@ nav a:focus {
 .about-me-widget .about-text {
     font-size: 16px;
     line-height: 1.5;
+    color: #f0f0f0;
 }
 
 /* Resume Header */
 .resume-header {
     text-align: center;
     padding: 120px 20px 60px 20px; /* Adjust padding for fixed nav */
-    background-color: #f9f9f9;
+    background-color: #1e1e1e;
     animation: fadeIn 1s ease-in-out;
 }
 
@@ -261,18 +295,19 @@ nav a:focus {
     font-family: 'Ailerons', sans-serif;
     font-size: 48px;
     margin-bottom: 10px;
+    color: #f0f0f0;
     animation: fadeInUp 1s ease-in-out;
 }
 
 .resume-header .contact-info {
     font-size: 18px;
-    color: #666;
+    color: #ccc;
     margin-top: 10px;
     animation: fadeIn 1s ease-in-out 0.5s both;
 }
 
 .resume-header .contact-info a {
-    color: #000;
+    color: #f0f0f0;
     text-decoration: none;
     margin: 0 10px;
     transition: color 0.3s;
@@ -280,12 +315,12 @@ nav a:focus {
 
 .resume-header .contact-info a:hover,
 .resume-header .contact-info a:focus {
-    color: #555;
+    color: #00bcd4;
 }
 
 /* Main Content */
 main {
-    padding: 50px 30px;
+    padding: 80px 30px 50px;
     max-width: 1200px;
     margin: 0 auto;
     animation: fadeIn 1s ease-in-out;
@@ -299,6 +334,7 @@ section h2 {
     text-align: center;
     position: relative;
     font-family: 'Ailerons', sans-serif;
+    color: #f0f0f0;
     animation: fadeInDown 1s ease-in-out;
 }
 
@@ -312,11 +348,13 @@ section h2 {
     font-size: 24px;
     margin-bottom: 5px;
     font-weight: 700;
+    color: #f0f0f0;
 }
 
 .item p {
     font-size: 16px;
     margin-bottom: 5px;
+    color: #f0f0f0;
 }
 
 .item ul {
@@ -327,6 +365,7 @@ section h2 {
 .item ul li {
     margin-bottom: 8px;
     font-size: 16px;
+    color: #f0f0f0;
 }
 
 /* Courses List */
@@ -334,6 +373,7 @@ section h2 {
     list-style-type: circle;
     padding-left: 20px;
     columns: 2;
+    color: #f0f0f0;
 }
 
 .courses li {
@@ -613,50 +653,51 @@ section h2 {
     to { width: 100%; }
 }
 
-@keyframes fadeOut {
-    to {
-        opacity: 0;
-        visibility: hidden;
-    }
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* Utility classes */
+.hidden {
+    display: none;
 }
 
 /* Responsive Styles */
 @media (max-width: 900px) {
-    .skills-grid {
-        flex-direction: column;
+    #terminal {
+        height: 70vh;
     }
-    .skill-category {
-        width: 100%;
+    
+    #terminal-container {
+        padding: 1rem;
     }
 }
 
 @media (max-width: 768px) {
-    .skills-grid {
-        flex-direction: column;
+    nav {
+        padding: 0.8rem 1.5rem;
     }
-    .skill-category {
-        width: 100%;
-    }
-
+    
     nav ul {
         flex-direction: column;
-        align-items: center;
+        align-items: flex-end;
     }
 
     nav li {
         margin-left: 0;
-        margin-top: 10px;
+        margin-top: 5px;
     }
-
-    .tab-buttons {
-        flex-direction: column;
+    
+    #terminal-container {
+        padding: 1rem;
+        margin-top: 80px;
     }
-
-    .tab-button {
-        width: 100%;
-        margin-bottom: 5px;
+    
+    #terminal {
+        height: 60vh;
     }
-
+    
     .about-me-widget {
         flex-direction: column;
         align-items: center;
@@ -668,14 +709,21 @@ section h2 {
     }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 480px) {
     nav .logo {
-        font-size: 20px;
+        font-size: 1.2rem;
     }
-
-    .resume-header h1 {
-        font-size: 36px;
+    
+    #terminal-container {
+        padding: 0.5rem;
     }
-
-    section h2 {
-       
+    
+    #terminal {
+        padding: 0.8rem;
+        height: 70vh;
+    }
+    
+    .experience-title {
+        font-size: 1.4em;
+    }
+}
