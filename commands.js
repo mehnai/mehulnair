@@ -24,9 +24,47 @@ function createExperienceWidget(title, summary, details) {
 }
 
 const commands = {
+<<<<<<< HEAD
     help: function() {
         const helpText = `
 <span class="highlight">Available commands:</span>
+=======
+    help: {
+        description: "List available commands",
+        action: function() {
+            return "Available commands:\n- " + Object.keys(commands).join('\n- ');
+        }
+    },
+    about: {
+        description: "Show about me information",
+        action: function() {
+            return createAboutMeWidget();
+        }
+    },
+    publications: {
+        description: "Show publications",
+        action: function() {
+            return `Publications:
+1. Investigating Irradiated Superconducting Magnet Insulation Materials for Particle Accelerators
+   Published in IEEE Transactions on Applied Superconductivity.
+2. Smart Quench Management System Based on Fast Low-Level Voltage Measurements for HTS Magnets
+   Presented at ASC 2024.
+3. Morphology Based Image Processing for Improved Atomic Position Determination in STEM Imaging
+   Presented at UCI SURF Research Symposium.
+4. Effects of Composition on Radiation Damage Severity in Epoxy Mixes
+   Presented at MSE 104 Research Symposium at UC Berkeley.`;
+        }
+    },
+    education: {
+        description: "Show education details",
+        action: function() {
+            return `Education:
+University of California Berkeley
+B.S. Materials Science and Engineering & Nuclear Engineering
+August 2022 - May 2026
+GPA: 3.7
+Activities and Societies: IEEE Indrel Officer, ANS Research Coordinator, Net Impact Berkeley, MSEA
+>>>>>>> parent of 2c1fb3a (gpa)
 
 <span class="highlight">about</span>       - Learn about me
 <span class="highlight">skills</span>      - View my technical skills
