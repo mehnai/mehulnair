@@ -362,4 +362,295 @@ Enter your guess using the 'guess [number]' command.`;
     }
 };
 
-// Note: Since the 'commands' object is used in script.js, we do not need to include a 'handleCommand' function here.
+// Available commands for autocomplete
+const availableCommands = [
+    'help', 'about', 'education', 'experience', 
+    'projects', 'skills', 'contact', 'clear', 
+    'open-resume', 'socials', 'publications'
+];
+
+// Handle command execution
+function handleCommand(cmd, args) {
+    switch(cmd) {
+        case 'help':
+            showHelp();
+            break;
+        case 'about':
+            showAbout();
+            break;
+        case 'education':
+            showEducation();
+            break;
+        case 'experience':
+            showExperience();
+            break;
+        case 'projects':
+            showProjects();
+            break;
+        case 'skills':
+            showSkills();
+            break;
+        case 'contact':
+            showContact();
+            break;
+        case 'clear':
+            clearTerminal();
+            break;
+        case 'open-resume':
+            openResume();
+            break;
+        case 'socials':
+            showSocials();
+            break;
+        case 'publications':
+            showPublications();
+            break;
+        default:
+            unknownCommand(cmd);
+    }
+}
+
+// Command implementations
+function showHelp() {
+    const helpText = `
+Available commands:
+  help          - Show this help message
+  about         - Learn about Mehul Nair
+  education     - View educational background
+  experience    - View work experience
+  projects      - View personal and research projects
+  skills        - View technical skills
+  publications  - View research publications
+  contact       - Get contact information
+  socials       - View social media links
+  open-resume   - Open formal resume in a new tab
+  clear         - Clear the terminal screen
+`;
+    typeText(helpText);
+}
+
+function showAbout() {
+    const aboutText = `
+About Mehul Nair:
+-------------------
+I am a Materials Science & Nuclear Engineering student at UC Berkeley 
+with a focus on materials for energy applications, particularly in nuclear 
+fusion and renewable energy technologies.
+
+My research interests include radiation effects on materials, advanced 
+semiconductor processing, and superconducting magnet technologies.
+
+I'm passionate about developing sustainable energy solutions through 
+materials innovation and interdisciplinary approaches.
+`;
+    typeText(aboutText);
+}
+
+function showEducation() {
+    const educationText = `
+Education:
+-------------------
+University of California, Berkeley
+B.S. Materials Science and Engineering & Nuclear Engineering
+August 2022 - May 2026
+
+Relevant Coursework:
+- Thin-Film Materials Science
+- Engineering Thermodynamics
+- Mechanical Behavior of Materials
+- Materials Characterization
+- Advanced Modeling of Manufacturing Processes
+- Nuclear Reactions
+- Controlled Fusion
+- Modern Physics
+`;
+    typeText(educationText);
+}
+
+function showExperience() {
+    const experienceText = `
+Experience:
+-------------------
+Superconducting Magnet Program, LBNL
+Student Researcher | October 2023 – Present
+- Created a quench detection system using LabView FPGA
+- Developing machine-level denoising of voltage data
+
+Center for Complex and Active Materials, Pan Group
+Student Researcher | June 2024 – August 2024
+- Utilized STEM imaging to study ferroelectric interfaces
+- Developed Python code to refine atomic positions
+
+Nuclear Materials Lab, UC Berkeley
+Undergraduate Research Assistant | September 2022 – September 2024
+- Conducted SEM, EBSD, and tensile testing on steel
+- Studied radiation effects on fusion materials
+
+Type 'experience management' for management experience details.
+`;
+    
+    if (args && args.length > 1 && args[1] === 'management') {
+        const managementText = `
+Management Experience:
+-------------------
+Goodwater Capital
+Student Consultant | August 2024 – Present
+- Conducted market analysis across nine global regions
+- Processed data for 15 key metrics, creating regional plans
+- Created visualizations to identify strategic investment opportunities
+
+Climeworks
+Student Consultant | January 2024 – May 2024
+- Analyzed market expansion possibilities for CDR market
+- Managed top 100 Salesforce accounts, assessing CDR adoption
+- Developed strategic sales decision frameworks
+
+Kiss The Ground
+Student Consultant | August 2023 – December 2023
+- Refined a B2B model to scale penetration in the EdTech market
+- Developed go-to-market strategies using case studies
+- Redesigned the website using interactive Figma prototypes
+`;
+        typeText(managementText);
+    } else {
+        typeText(experienceText);
+    }
+}
+
+function showProjects() {
+    const projectsText = `
+Projects:
+-------------------
+Smart Quench Management System
+- Developed a real-time quench detection system for HTS magnets
+- Implemented FPGA-based voltage monitoring with ultra-low latency
+- Created data processing algorithms to filter noise and detect quench events
+
+Ferroelectric Interface Analysis
+- Analyzed STEM images of ferroelectric domain boundaries
+- Developed Python code for automated atom position refinement
+- Correlated interface structure with electronic properties
+
+Visit my GitHub for more projects: https://github.com/mehulnair
+`;
+    typeText(projectsText);
+}
+
+function showSkills() {
+    const skillsText = `
+Technical Skills:
+-------------------
+Software:
+- Microsoft Office, Figma, Canva, Python, Data Analysis, Research, Data Acquisition
+
+Technical:
+- SEM, Sample Preparation, Mechanical Testing, EDS, EBSD, TEM Sample Preparation
+- X-Ray Diffraction, STEM
+
+Other:
+- Organizational Skills, Teamwork, Leadership, Interpersonal Skills
+`;
+    typeText(skillsText);
+}
+
+function showPublications() {
+    const publicationsText = `
+Publications:
+-------------------
+1. Investigating Irradiated Superconducting Magnet Insulation Materials for Particle Accelerators
+   IEEE Transactions on Applied Superconductivity
+   https://ieeexplore.ieee.org/document/10029975
+
+2. Smart Quench Management System Based on Fast Low-Level Voltage Measurements for HTS Magnets
+   (In preparation)
+`;
+    typeText(publicationsText);
+}
+
+function showContact() {
+    const contactText = `
+Contact Information:
+-------------------
+Email: mehulnair2005@gmail.com
+Phone: 510-974-6768
+LinkedIn: https://linkedin.com/in/mehnai
+`;
+    typeText(contactText);
+}
+
+function showSocials() {
+    const socialsText = `
+Social Media:
+-------------------
+LinkedIn: https://linkedin.com/in/mehnai
+GitHub: https://github.com/mehulnair
+`;
+    typeText(socialsText);
+}
+
+function openResume() {
+    typeText("Opening resume in a new tab...\n");
+    window.open("resume.html", "_blank");
+}
+
+function clearTerminal() {
+    terminalOutput.textContent = '';
+}
+
+function unknownCommand(cmd) {
+    typeText(`\nCommand not found: '${cmd}'. Type 'help' for a list of available commands.\n`);
+}
+
+// Autocomplete functionality
+function handleAutocomplete() {
+    const input = commandInput.value.toLowerCase();
+    autocompleteList.innerHTML = '';
+    
+    if (input.trim() === '') {
+        autocompleteList.style.display = 'none';
+        return;
+    }
+    
+    const matchingCommands = availableCommands.filter(cmd => 
+        cmd.startsWith(input)
+    );
+    
+    if (matchingCommands.length === 0) {
+        autocompleteList.style.display = 'none';
+        return;
+    }
+    
+    autocompleteList.style.display = 'block';
+    
+    matchingCommands.forEach(cmd => {
+        const item = document.createElement('div');
+        item.className = 'autocomplete-suggestion';
+        item.textContent = cmd;
+        
+        item.addEventListener('click', () => {
+            commandInput.value = cmd;
+            autocompleteList.innerHTML = '';
+            autocompleteList.style.display = 'none';
+            commandInput.focus();
+        });
+        
+        autocompleteList.appendChild(item);
+    });
+}
+
+// Tab completion
+function handleTabCompletion() {
+    const input = commandInput.value.toLowerCase();
+    
+    if (input.trim() === '') return;
+    
+    const matchingCommands = availableCommands.filter(cmd => 
+        cmd.startsWith(input)
+    );
+    
+    if (matchingCommands.length === 1) {
+        commandInput.value = matchingCommands[0];
+    } else if (matchingCommands.length > 0) {
+        handleAutocomplete();
+    }
+}

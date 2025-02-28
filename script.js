@@ -19,6 +19,10 @@ document.addEventListener('DOMContentLoaded', function() {
         output = document.getElementById('output');
         const autocompleteList = document.getElementById('autocomplete-list');
 
+        // Command history functionality
+        let commandHistory = [];
+        let historyIndex = -1;
+
         // Check if the loading screen has been shown in this session
         if (!sessionStorage.getItem('loadingShown')) {
             // Show loading screen
@@ -204,6 +208,62 @@ document.addEventListener('DOMContentLoaded', function() {
         function scrollToBottom() {
             output.scrollTop = output.scrollHeight;
         }
+
+        // Welcome message function
+        function printWelcomeMessage() {
+            const welcomeMessage = `
+Welcome to Mehul Nair's personal terminal.
+Type 'help' to see available commands.
+
+`;
+            typeText(welcomeMessage);
+        }
+
+        // Simulates typing text character by character
+        function typeText(text, speed = 10) {
+            let i = 0;
+            const typing = setInterval(() => {
+                if (i < text.length) {
+                    output.textContent += text[i];
+                    output.scrollTop = output.scrollHeight; // Auto scroll
+                    i++;
+                } else {
+                    clearInterval(typing);
+                }
+            }, speed);
+        }
+
+        // Handle input for autocomplete
+        commandInput.addEventListener('input', function() {
+            handleAutocomplete();
+        });
+
+        // Click outside to clear autocomplete
+        document.addEventListener('click', function(e) {
+            if (e.target !== commandInput && e.target !== autocompleteList) {
+                autocompleteList.innerHTML = '';
+                autocompleteList.style.display = 'none';
+            }
+        });
+
+        // Focus input when terminal is clicked
+        document.getElementById('terminal').addEventListener('click', function() {
+            commandInput.focus();
+        });
+
+        // Function to process entered commands
+        function processCommand(command) {
+            const commandLower = command.toLowerCase();
+            const args = commandLower.split(' ');
+            const cmd = args[0];
+
+            // Use the handleCommand function from commands.js
+            handleCommand(cmd, args);
+        }
+
+        // Export functions to window object for access from commands.js
+        window.terminalOutput = output;
+        window.typeText = typeText;
     }
 
     // Initialize the terminal
