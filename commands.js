@@ -5,9 +5,9 @@ function createAboutMeWidget() {
 <div class="about-me-widget">
     <img src="mehul.png" alt="Mehul Nair">
     <div class="about-text">
-        Hello! I'm Mehul Nair, a passionate Materials Science and Nuclear Engineering student at the University of California Berkeley.
-        I specialize in superconducting magnet research and have experience in both technical and management roles.
-        Feel free to explore my resume by typing 'help' for a list of available commands.
+        Hello! I'm Mehul Nair, a Materials Science and Nuclear Engineering student at the University of California Berkeley.
+        I specialize in superconducting magnet research and have experience in both technical research and consulting roles.
+        Type 'help' to see available commands and learn more about my background.
     </div>
 </div>`;
 }
@@ -30,9 +30,10 @@ const commands = {
 
 <span class="highlight">about</span>       - Learn about me
 <span class="highlight">skills</span>      - View my technical skills
-<span class="highlight">projects</span>    - Browse my portfolio projects
+<span class="highlight">projects</span>    - Browse my research projects
 <span class="highlight">experience</span>  - View my work experience
 <span class="highlight">education</span>   - View my educational background
+<span class="highlight">publications</span> - View my publications
 <span class="highlight">contact</span>     - How to get in touch with me
 <span class="highlight">social</span>      - Links to my social profiles
 <span class="highlight">resume</span>      - View or download my resume
@@ -45,10 +46,9 @@ const commands = {
         const aboutText = `
 <span class="highlight">About Mehul Nair:</span>
 
-I'm a software developer with a passion for creating efficient and elegant solutions.
-My focus is on full-stack development, with expertise in modern web technologies.
-When I'm not coding, I enjoy [your hobbies/interests].
-
+I'm a Materials Science and Nuclear Engineering student at UC Berkeley with a focus on 
+superconducting magnet research. My technical experience spans SEM imaging, mechanical 
+property testing, and quench detection system development using LabView FPGA.
 I'm driven by curiosity and continuous learning, always exploring new technologies
 and approaches to solve complex problems.
 `;
