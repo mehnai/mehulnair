@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mehul Nair - Blog</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* Global Reset & Hide Default Cursor Everywhere */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      /* Default cursor behavior handled by media query below */
+    }
+
+    /* Global Styles */
+    body {
+      font-family: 'IBM Plex Mono', monospace;
+      background: #fff;
+      color: #333;
+      line-height: 1.6;
+      overflow-x: hidden;
+      font-size: 1rem;
+      position: relative;
+      padding: 0 20px;
+    }
+    a {
+      text-decoration: none;
+      transition: background 0.3s ease, color 0.3s ease;
+      color: #007bff; /* Subtle link color */
+    }
+    a:hover, a.highlight {
+      background: #000;
+      color: #fff;
+    }
+    ::selection {
+      background: #000;
+      color: #fff;
+    }
+
+    /* Top Navigation Bar */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 10px 20px;
+      height: 60px;
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+      border-bottom: 1px solid #eee;
+    }
+    .logo {
+      font-size: 1.2rem;
+      font-weight: 500;
+    }
+     .logo a { color: #333; text-decoration: none;}
+     .logo a:hover { background: none; color: #555; }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 15px;
+    }
+    nav li {
+      font-size: 1rem;
+    }
+     nav a { color: #333; }
+
+    /* Main Blog Content Area */
+    main {
+      padding-top: 80px;
+      padding-bottom: 40px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    main h1 {
+      font-size: 2rem;
+      font-weight: 500;
+      margin-bottom: 30px;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 15px;
+    }
+
+    /* Blog Post List */
+    #blog-post-list {
+      list-style: none;
+      padding: 0;
+    }
+    .blog-post-item {
+      background-color: #f9f9f9;
+      border: 1px solid #eee;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      padding: 15px 20px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.5s ease forwards;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .blog-post-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+    .blog-post-item a {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+     .blog-post-item a:hover {
+        background: none;
+        color: inherit;
+     }
+
+    .blog-post-item h2 {
+      font-size: 1.3rem;
+      font-weight: 500;
+      margin-bottom: 5px;
+      color: #333;
+      transition: color 0.3s ease;
+    }
+    .blog-post-item:hover h2 {
+        color: #007bff;
+    }
+
+    .post-date {
+      font-size: 0.85rem;
+      color: #777;
+      margin-bottom: 10px;
+      display: block;
+    }
+    .post-snippet {
+        font-size: 0.95rem;
+        color: #555;
+    }
+
+    /* Staggered animation */
+    .blog-post-item:nth-child(1) { animation-delay: 0.1s; }
+    .blog-post-item:nth-child(2) { animation-delay: 0.2s; }
+    .blog-post-item:nth-child(3) { animation-delay: 0.3s; }
+    /* Add more if needed */
+
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* --- RESUME CURSOR STYLE --- */
+    .custom-cursor {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background-color: black;
+      position: fixed;
+      pointer-events: none;
+      /* Use translate3d for transform - removed as resume uses top/left */
+      /* Position using top/left */
+      top: 0; left: 0;
+      transition: opacity 0.1s ease, transform 0.1s ease, background-color 0.2s ease; /* Re-add transform transition */
+      z-index: 9999;
+      opacity: 0; /* Start hidden */
+      /* No mix-blend-mode */
+    }
+     /* .visible class not needed by this script version */
+     .custom-cursor.hover {
+        transform: scale(1.3); /* Adjusted transform for hover */
+        background-color: red; /* Hover color from resume example */
+     }
+    .custom-cursor.click {
+        transform: scale(0.8); /* Adjusted transform for click */
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+      body { font-size: 0.95rem; padding: 0 15px; }
+      header { padding: 10px 15px; }
+      main { padding-top: 70px; max-width: 95%;}
+      main h1 { font-size: 1.6rem; }
+      .blog-post-item h2 { font-size: 1.2rem; }
+      .custom-cursor { display: none; }
+      * { cursor: auto !important; }
+    }
+    /* Only show custom cursor on devices that support hover */
+    @media (hover: hover) and (pointer: fine) {
+        .custom-cursor { display: block; }
+        * { cursor: none !important; } /* Hide default only on hover devices */
+    }
+
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo"><a href="index.html">Mehul Nair</a></div>
+    <nav>
+      <ul>
+        <li><a href="blog.html" class="highlight">Blog</a></li>
+        <li><a href="resume.html">Resume</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Blog</h1>
+
+    <!--
+    ===============================================================
+    HOW TO ADD A NEW BLOG POST SUMMARY:
+    1. Copy one of the existing `<li class="blog-post-item">...</li>` blocks.
+    2. Paste it at the TOP of this list (just below this comment).
+    3. Create a unique `slug` (short-url-friendly-name) for your post.
+    4. Update the `data-slug` attribute on the `<li>` tag with your new slug.
+    5. Update the `href` attribute in the `<a>` tag to `blog-post.html?slug=YOUR_NEW_SLUG`.
+    6. Change the `<h2>` text to your new post title.
+    7. Update the `<span class="post-date">` with the correct date.
+    8. Write a brief summary/snippet in the `<p class="post-snippet">`.
+    9. IMPORTANT: Go to `blog-post.html` and add the *full content* for this post
+       to the `allPosts` array in the JavaScript section, using the SAME slug.
+    ===============================================================
+    -->
+
+    <ul id="blog-post-list">
+      <!-- Add newest posts HERE -->
+
+      <li class="blog-post-item" data-slug="welcome-to-the-blog">
+        <a href="blog-post.html?slug=welcome-to-the-blog">
+          <h2>Test</h2>
+          <span class="post-date">April 7, 2025</span>
+          <p class="post-snippet">Testing...</p>
+        </a>
+      </li>
+      <!-- Older posts go below -->
+    </ul>
+
+  </main>
+
+  <div class="custom-cursor" id="customCursor"></div>
+
+  <script>
+    // --- RESUME CURSOR SCRIPT ---
+    const cursor = document.getElementById('customCursor');
+    let mouseX = 0, mouseY = 0;
+    let cursorX = 0, cursorY = 0;
+    let speed = 0.15; // Speed from resume example
+    let isVisible = false;
+    let animationFrameId = null;
+
+    function animateCursor() {
+        if (!isVisible) return;
+
+        let dx = mouseX - cursorX;
+        let dy = mouseY - cursorY;
+        cursorX += dx * speed;
+        cursorY += dy * speed;
+
+        // Update position using style.left and style.top as in resume example
+        cursor.style.left = cursorX + 'px';
+        cursor.style.top = cursorY + 'px';
+
+        animationFrameId = requestAnimationFrame(animateCursor);
+    }
+
+    document.addEventListener('mousemove', e => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      if (!isVisible) {
+          // Use opacity directly, no .visible class needed by this logic version
+          cursor.style.opacity = '1';
+          // Set initial position to avoid jump
+          cursorX = mouseX;
+          cursorY = mouseY;
+          cursor.style.left = cursorX + 'px';
+          cursor.style.top = cursorY + 'px';
+          isVisible = true;
+          if (animationFrameId) cancelAnimationFrame(animationFrameId); // Cancel existing frame if any
+          animateCursor(); // Start animation loop
+      }
+    }, { passive: true }); // Improve scroll performance
+
+    document.addEventListener('mousedown', () => {
+         if(isVisible) cursor.classList.add('click');
+    });
+    document.addEventListener('mouseup', () => {
+         // Check visibility before removing class, just in case mouseup happens after mouseleave
+        if(isVisible) cursor.classList.remove('click');
+    });
+
+    // Apply hover effect to interactive elements
+    function updateHoverState() {
+         // Hover targets: Links, Nav items (which are links), blog post items, logo link
+         document.querySelectorAll('a, .blog-post-item').forEach(el => {
+            el.removeEventListener('mouseenter', addHover); // Prevent duplicates
+            el.removeEventListener('mouseleave', removeHover);
+            el.addEventListener('mouseenter', addHover);
+            el.addEventListener('mouseleave', removeHover);
+        });
+    }
+    const addHover = () => { if(isVisible) cursor.classList.add('hover'); };
+    const removeHover = () => { if(isVisible) cursor.classList.remove('hover'); };
+
+    // Hide cursor and stop animation when mouse leaves window
+    document.addEventListener('mouseleave', (e) => {
+        // Check if mouse is truly leaving the window vs moving onto a child element
+         if (!e.relatedTarget && !e.toElement) {
+            cursor.style.opacity = '0';
+            isVisible = false;
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+             // Also remove hover/click states if mouse leaves completely
+             cursor.classList.remove('hover', 'click');
+         }
+    });
+     // Re-show if mouse re-enters
+    document.addEventListener('mouseenter', (e) => {
+         // mousemove will handle making it visible and starting animation
+    });
+
+    // Initial setup
+    document.addEventListener('DOMContentLoaded', () => {
+        updateHoverState();
+        // Don't start animation until first mousemove
+    });
+
+  </script>
+</body>
+</html>
