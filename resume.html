@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mehul Nair - Resume</title>
+  <!-- Load IBM Plex Mono from Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* Global Reset & Hide Default Cursor Everywhere */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      cursor: none !important;
+    }
+
+    /* Global Styles */
+    body {
+      font-family: 'IBM Plex Mono', monospace;
+      background: #fff;
+      color: #333;
+      line-height: 1.6;
+      overflow-x: hidden;
+      font-size: 1rem;
+      position: relative;
+      padding: 0 20px; /* Add padding for smaller screens */
+    }
+    a {
+      text-decoration: none;
+      transition: background 0.3s ease, color 0.3s ease;
+      color: #333;
+    }
+    a:hover, a.highlight {
+      background: #000;
+      color: #fff;
+    }
+    ::selection {
+      background: #000;
+      color: #fff;
+    }
+
+    /* Top Navigation Bar */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 10px 20px;
+      height: 60px;
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+      border-bottom: 1px solid #eee;
+    }
+    .logo {
+      font-size: 1.2rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 15px;
+    }
+    nav li {
+      font-size: 1rem;
+    }
+
+    /* Main Resume Content Area */
+    main {
+      padding-top: 80px;
+      padding-bottom: 40px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* Resume Header (Name, Contact) */
+    .resume-header {
+      text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #333;
+      padding-bottom: 15px;
+    }
+    .resume-header h1 {
+      font-size: 2.2rem;
+      margin-bottom: 5px;
+      font-weight: 500;
+      letter-spacing: 1px;
+    }
+    .resume-header p {
+      font-size: 0.95rem;
+      color: #555;
+    }
+    .resume-header a {
+      color: #333;
+      text-decoration: underline;
+    }
+    .resume-header a:hover {
+      background: #000;
+      color: #fff;
+      text-decoration: none;
+    }
+
+    /* Resume Sections */
+    section {
+      margin-bottom: 25px;
+    }
+    section h2 {
+      font-size: 1.3rem;
+      font-weight: 500;
+      border-bottom: 1px solid #000;
+      padding-bottom: 5px;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Education & Experience Entry Styling */
+    .entry {
+      margin-bottom: 20px;
+    }
+    .entry-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 5px;
+      flex-wrap: wrap;
+    }
+    .entry h3 {
+      font-size: 1.1rem;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+    .entry .details {
+      text-align: right;
+      font-size: 0.9rem;
+      font-style: italic;
+      color: #555;
+      min-width: 150px;
+      padding-left: 10px;
+    }
+    .entry .sub-details {
+      display: block;
+      font-size: 0.95rem;
+      font-style: italic;
+      color: #444;
+      margin-bottom: 8px;
+    }
+    .entry ul {
+      list-style: none;
+      padding-left: 20px;
+    }
+    .entry li {
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+      position: relative;
+    }
+    .entry li::before {
+      content: '•';
+      position: absolute;
+      left: -15px;
+      top: 1px;
+      color: #333;
+      font-size: 0.8rem;
+    }
+
+    /* Coursework & Skills Styling */
+    .coursework p, .skills p {
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+    }
+    .skills ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    .skills li {
+      margin-bottom: 5px;
+      font-size: 0.95rem;
+    }
+    .skills strong {
+      display: inline-block;
+      min-width: 80px;
+      font-weight: 500;
+    }
+
+    /* Publications */
+    .publication {
+      margin-bottom: 15px;
+    }
+    .publication p {
+      font-size: 0.95rem;
+      margin-bottom: 2px;
+    }
+    .publication .title {
+      font-weight: 500;
+    }
+    .publication .details {
+      font-size: 0.9rem;
+      color: #555;
+      padding-left: 15px;
+    }
+
+    /* Custom Cursor */
+    .custom-cursor {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background-color: black;
+      position: fixed;
+      pointer-events: none;
+      transition: opacity 0.1s ease, transform 0.1s ease, background-color 0.2s ease;
+      z-index: 9999;
+      opacity: 0; /* Start hidden until first mouse movement */
+    }
+    .custom-cursor.click { transform: scale(0.8); }
+    .custom-cursor.hover { background-color: red; transform: scale(1.3); }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+      body { font-size: 0.95rem; padding: 0 15px; }
+      header { padding: 10px 15px; }
+      main { padding-top: 70px; }
+      .resume-header h1 { font-size: 1.8rem; }
+      .resume-header p { font-size: 0.9rem; }
+      section h2 { font-size: 1.2rem; }
+      .entry-header { flex-direction: column; align-items: flex-start; }
+      .entry .details { text-align: left; padding-left: 0; margin-top: 3px; margin-bottom: 5px; }
+      .entry ul { padding-left: 15px; }
+      .entry li::before { left: -12px; }
+      .skills strong { display: block; margin-bottom: 2px; min-width: auto; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo"><a href="index.html">Mehul Nair</a></div>
+    <nav>
+      <ul>
+        <li><a href="blog.html">Blog</a></li>
+        <li><a href="resume.html" class="highlight">Resume</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <div class="resume-header">
+      <h1>Mehul Nair</h1>
+      <p>
+        <a href="tel:510-974-6768">510-974-6768</a> |
+        <a href="mailto:mehulnair2005@gmail.com">mehulnair2005@gmail.com</a> |
+        <a href="https://linkedin.com/in/mehnai" target="_blank">linkedin.com/in/mehnai</a> |
+        Berkeley, CA
+      </p>
+    </div>
+
+    <section id="education">
+      <h2>Education</h2>
+      <div class="entry">
+        <div class="entry-header">
+          <h3>University of California Berkeley</h3>
+          <div class="details">Aug 2022 - May 2026 (Expected)</div>
+        </div>
+        <div class="sub-details">B.S. Materials Science and Engineering & Nuclear Engineering | Berkeley, CA</div>
+        <p style="font-size: 0.95rem;"><strong>Activities:</strong> IEEE (Industrial Relations Officer/Exec), ANS (Research Director/Coordinator), Net Impact Berkeley (Executive Board), MSEA</p>
+      </div>
+    </section>
+
+    <section id="coursework" class="coursework">
+      <h2>Relevant Coursework</h2>
+      <p><strong>Current:</strong> Electronic Materials, Phase Transformations and Kinetics, Microfabrication Technology, Nuclear Reactor Theory</p>
+      <p><strong>Completed:</strong> Thin-Film Materials Science, Materials Characterization, Advanced Modeling of Manufacturing Processes (Graduate), Mechanical Behavior of Materials, Nuclear Reactions & Radiation, Bonding Crystallography and Defects, Introduction to Controlled Fusion, Electricity and Magnetism, Thermodynamics</p>
+    </section>
+
+    <section id="experience">
+      <h2>Experience</h2>
+      <div class="entry">
+        <div class="entry-header">
+          <h3>Taiwan Semiconductor Manufacturing Corporation (TSMC)</h3>
+          <div class="details">May 2025 - Aug 2025 (Incoming)</div>
+        </div>
+        <div class="sub-details">Epitaxy Process Intern | Phoenix, AZ</div>
+        <ul>
+          <li>Designing and verifying epitaxial deposition processes for cutting-edge chip development.</li>
+          <li>Optimizing epitaxy processes to decrease costs and manufacturing time for chip fabrication at TSMC's new Arizona fab.</li>
+          <li>Developing doping processes using advanced epitaxy technology to maximize yields for semiconductor production.</li>
+        </ul>
+      </div>
+      <div class="entry">
+        <div class="entry-header">
+          <h3>Goodwater Capital</h3>
+          <div class="details">Aug 2024 - Feb 2025</div>
+        </div>
+        <div class="sub-details">Senior Student Consultant | Berkeley, CA</div>
+        <ul>
+          <li>Conducted market analysis across nine regions, utilizing 25+ databases and reports to identify growth opportunities.</li>
+          <li>Gathered and processed data for 15 key metrics across various regions, condensing information into regional plans.</li>
+          <li>Created detailed visualizations to illustrate significant trends and recommend four strategic investment opportunities.</li>
+        </ul>
+      </div>
+      <div class="entry">
+        <div class="entry-header">
+          <h3>Superconducting Magnet Program, Lawrence Berkeley National Lab (LBNL)</h3>
+          <div class="details">Oct 2023 - Present</div>
+        </div>
+        <div class="sub-details">Student Researcher | Berkeley, CA</div>
+        <ul>
+          <li>Created a novel metrology thresholding system, improving sensitivity by 1000x compared to state-of-the-art, sharply decreasing magnet damage potential.</li>
+          <li>Utilized 3+ unique ML architectures to develop a model that prevents damage to high-temperature superconducting (HTS) magnets.</li>
+          <li>Developed machine-level denoising of voltage data to increase superconductor damage response window by 5 times.</li>
+        </ul>
+      </div>
+      <div class="entry">
+        <div class="entry-header">
+          <h3>Center for Complex and Active Materials (CCAM), UC Irvine (Pan Group)</h3>
+          <div class="details">Jun 2024 - Aug 2024</div>
+        </div>
+        <div class="sub-details">Student Researcher | Irvine, CA</div>
+        <ul>
+          <li>Applied Scanning Transmission Electron Microscopy (STEM) imaging to achieve atomic-level resolution across two distinct ferroelectric interfaces for analysis of polarization and oxygen octahedral tilt.</li>
+          <li>Developed and implemented image processing algorithms on low-resolution charge density maps (&lt;100k pixels), improving atomic precision determination by 100% and reducing polarization measurement uncertainty.</li>
+          <li>Improved polarization map uniformity in ferroelectric interfaces by 40% through optimized imaging and processing protocols, enabling oxygen fitting for the first time in one interface.</li>
+        </ul>
+      </div>
+      <div class="entry">
+        <div class="entry-header">
+          <h3>Climeworks</h3>
+          <div class="details">Jan 2024 - May 2024</div>
+        </div>
+        <div class="sub-details">Student Consultant (Net Impact Berkeley) | Berkeley, CA</div>
+        <ul>
+          <li>Analyzed market expansion possibilities for Carbon Dioxide Removal (CDR) by sourcing, conducting, and analyzing 10 stakeholder interviews and researching industry ESG disclosures.</li>
+          <li>Managed Climeworks’ top 100 Salesforce accounts with a team of five, assessing CDR adoption potential through climate maturity analysis.</li>
+          <li>Investigated decision-making hierarchies and developed strategic sales decision frameworks aligned with company goals.</li>
+        </ul>
+      </div>
+      <div class="entry">
+        <div class="entry-header">
+          <h3>Applied Nuclear Physics Division, Lawrence Berkeley National Lab (LBNL)</h3>
+          <div class="details">Mar 2023 - Mar 2024</div>
+        </div>
+        <div class="sub-details">Research Affiliate | Berkeley, CA</div>
+        <ul>
+          <li>Tested novel image reconstruction algorithms (using Python, statistical models, penalty functions) for low-noise near-field imaging of radioactive sources in medical settings.</li>
+          <li>Developed fitting algorithms to identify peaks in radiation spectra (Gamma Vision output) for characterizing differences in radiation detectors.</li>
+        </ul>
+      </div>
+      <div class="entry">
+        <div class="entry-header">
+          <h3>Kiss The Ground</h3>
+          <div class="details">Aug 2023 - Dec 2023</div>
+        </div>
+        <div class="sub-details">Student Consultant (Net Impact Berkeley) | Berkeley, CA</div>
+        <ul>
+          <li>Conducted product analysis to refine a B2B model for scaling an online environmental learning course in the corporate EdTech market.</li>
+          <li>Developed go-to-market strategy by creating case studies on ESG and CSR-focused companies.</li>
+          <li>Redesigned website sections using interactive Figma prototypes to enhance user engagement and retention.</li>
+        </ul>
+      </div>
+      <div class="entry">
+        <div class="entry-header">
+          <h3>Nuclear Materials Lab, UC Berkeley</h3>
+          <div class="details">Sep 2022 - Sep 2024</div>
+        </div>
+        <div class="sub-details">Undergraduate Research Assistant | Berkeley, CA</div>
+        <ul>
+          <li>Conducted advanced failure analysis and characterization (SEM, EBSD, Tensile Testing) on over 80 additively manufactured steel samples for microstructure analysis.</li>
+          <li>Performed experiments studying radiation effects on fusion energy materials to determine future energy viability (in conjunction with LBNL's Superconducting Magnet Program).</li>
+          <li>Conducted mechanical properties testing on irradiated epoxy mixes used for superconducting accelerator magnets (results published).</li>
+          <li>Utilized SEM to analyze and characterize REBCO superconductors; prepared samples for TEM using FIB lift-out techniques.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="publications">
+      <h2>Publications & Presentations</h2>
+      <div class="publication">
+        <p class="title">Smart Quench Management System Based on Fast Low-Level Voltage Measurements for HTS Magnets</p>
+        <p class="details">Presented at Applied Superconductivity Conference (ASC) 2024, Salt Lake City, UT.</p>
+      </div>
+      <div class="publication">
+        <p class="title">Morphology Based Image Processing for Improved Atomic Position Determination in STEM Imaging</p>
+        <p class="details">Presented at UC Irvine SURF Research Symposium, August 2024.</p>
+      </div>
+      <div class="publication">
+        <p class="title">Investigating Irradiated Superconducting Magnet Insulation Materials for Particle Accelerators</p>
+        <p class="details">Published in IEEE Transactions on Applied Superconductivity, vol. 33, no. 5, pp. 1-7, Aug. 2023, Art no. 7700307. <a href="https://doi.org/10.1109/TASC.2023.3252480" target="_blank">[DOI Link]</a></p>
+      </div>
+      <div class="publication">
+        <p class="title">Effects of Composition on Radiation Damage Severity in Epoxy Mixes</p>
+        <p class="details">Presented at MSE 104 Research Symposium, UC Berkeley, May 2023.</p>
+      </div>
+    </section>
+
+    <section id="skills" class="skills">
+      <h2>Technical Skills</h2>
+      <ul>
+        <li><strong>Software:</strong> Python (NumPy, Pandas, Matplotlib), Java, MATLAB, LabView, SolidWorks, Figma, Digital Micrograph (GMS), Image Processing Libraries, Machine Learning (basic architectures), Data Analysis & Visualization, Microsoft Office Suite</li>
+        <li><strong>Technical:</strong> Scanning Electron Microscopy (SEM), Energy Dispersive X-Ray Spectroscopy (EDS), Electron Backscatter Diffraction (EBSD), Focused Ion Beam (FIB) for TEM Sample Prep, Transmission Electron Microscopy (TEM) operation (basic), Scanning Transmission Electron Microscopy (STEM), X-Ray Diffraction (XRD), Mechanical Property Testing (Tensile), Sample Preparation (Metallography), Data Acquisition/Scraping, Research Methodologies</li>
+        <li><strong>Other:</strong> Project Management, Market Analysis, Go-to-Market Strategy, Stakeholder Interviews, Data Synthesis, Teamwork, Leadership, Communication (Written & Verbal), Problem-Solving</li>
+      </ul>
+    </section>
+
+    <section id="interests">
+      <h2>Personal Interests</h2>
+      <p style="font-size: 0.95rem;">STEM Education Access, Rock Climbing, Renaissance Tapestries, Yu-Gi-Oh! Collecting, 3D-Modeling</p>
+    </section>
+  </main>
+
+  <div class="custom-cursor" id="customCursor"></div>
+  <script>
+    const cursor = document.getElementById('customCursor');
+    let mouseX = 0, mouseY = 0;
+    let cursorX = 0, cursorY = 0;
+    let speed = 0.15; // Smoothing factor (lower = smoother, slower)
+    let isVisible = false;
+
+    // Initialize cursor position at the center of the viewport when the page loads
+    window.addEventListener('load', () => {
+      mouseX = window.innerWidth / 2;
+      mouseY = window.innerHeight / 2;
+      cursorX = mouseX;
+      cursorY = mouseY;
+      cursor.style.left = cursorX + 'px';
+      cursor.style.top = cursorY + 'px';
+    });
+
+    function animateCursor() {
+      let dx = mouseX - cursorX;
+      let dy = mouseY - cursorY;
+      cursorX += dx * speed;
+      cursorY += dy * speed;
+      cursor.style.left = cursorX + 'px';
+      cursor.style.top = cursorY + 'px';
+      requestAnimationFrame(animateCursor);
+    }
+
+    document.addEventListener('mousemove', e => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      if (!isVisible) {
+        cursor.style.opacity = '1';
+        isVisible = true;
+      }
+    });
+
+    document.addEventListener('mousedown', () => cursor.classList.add('click'));
+    document.addEventListener('mouseup', () => cursor.classList.remove('click'));
+
+    // Apply hover effects to links, buttons, and specific elements
+    document.querySelectorAll('a, button, .logo, .main-circle, .child-circle').forEach(el => {
+      el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+      el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+    });
+
+    // Hide cursor when mouse leaves the window
+    document.addEventListener('mouseleave', () => {
+      cursor.style.opacity = '0';
+      isVisible = false;
+    });
+
+    // Show cursor when mouse enters the window
+    document.addEventListener('mouseenter', () => {
+      cursor.style.opacity = '1';
+      isVisible = true;
+    });
+
+    // Start the animation loop for the cursor
+    requestAnimationFrame(animateCursor);
+  </script>
+</body>
+</html>

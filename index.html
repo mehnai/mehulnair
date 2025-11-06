@@ -1,439 +1,617 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mehul Nair</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mehul Nair</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* Global Reset & Hide Default Cursor Everywhere */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      cursor: none !important;
+    }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
-            background: #ffffff;
-            color: #000000;
-            line-height: 1.6;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-        }
+    /* Global Styles */
+    body {
+      font-family: 'IBM Plex Mono', monospace;
+      background: transparent; /* See canvas behind */
+      color: #333;
+      line-height: 1.6;
+      overflow-x: hidden; /* Prevent horizontal scroll */
+      font-size: 1rem;
+      position: relative;
+      padding: 0 20px;
+       min-height: 100vh; /* Ensure body takes full height */
+    }
+    a {
+      text-decoration: none;
+      transition: background 0.3s ease, color 0.3s ease;
+      color: #333;
+       cursor: none !important;
+       pointer-events: auto !important; /* Make sure links are clickable */
+    }
+    a:hover, a.highlight {
+      background: #000;
+      color: #fff;
+    }
+    ::selection {
+      background: #000;
+      color: #fff;
+    }
 
-        nav {
-            position: fixed;
-            top: 2rem;
-            right: 2rem;
-            z-index: 1000;
-        }
+    /* Canvas Background */
+    #ca-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1; /* Behind everything */
+      pointer-events: auto; /* Allow mousemove for hover detection */
+    }
 
-        .menu-toggle {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 0.5rem;
-            color: #000000;
-            transition: opacity 0.3s ease;
-        }
+    /* Top Navigation Bar */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 10px 20px;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+    }
+    .logo { font-size: 1.2rem; font-weight: 500; cursor: pointer; pointer-events: auto !important; }
+    nav ul { list-style: none; display: flex; gap: 15px; }
+    nav li { font-size: 1rem; }
 
-        .menu-toggle:hover {
-            opacity: 0.5;
-        }
+    /* Main content area */
+    main {
+       position: relative;
+       z-index: 1; /* Above canvas */
+       padding-top: 60px; /* Account for fixed header */
+    }
 
-        .nav-menu {
-            position: absolute;
-            top: 3rem;
-            right: 0;
-            background: #ffffff;
-            border: 1px solid #e0e0e0;
-            padding: 1rem 0;
-            min-width: 150px;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
-        }
+    /* Hero Section */
+    .hero {
+      /* Removed margin-top */
+      min-height: calc(100vh - 60px - 40px); /* Adjust height accounting for header and bottom padding */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-bottom: 40px;
+    }
+    .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 900px;
+      margin: 20px auto 0 auto; /* Add some top margin */
+      background: rgba(255, 255, 255, 0.9);
+      padding: 30px;
+      border-radius: 8px;
+      backdrop-filter: blur(5px);
+      z-index: 2; /* Ensure container is above canvas but below header potentially */
+      position: relative; /* Needed for z-index */
+    }
+    .content {
+      flex: 1;
+      padding-right: 20px;
+      animation: fadeInLeft 1s cubic-bezier(0.23,1,0.32,1) forwards;
+    }
+    .content h1, .content p { font-size: 1rem; margin-bottom: 1rem; }
 
-        .nav-menu.active {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
+    .image-container {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      animation: fadeInRight 1s cubic-bezier(0.23,1,0.32,1) forwards;
+    }
+    .image-container img {
+      max-width: 100%;
+      border-radius: 8px;
+      transition: transform 0.3s ease;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      pointer-events: none; /* Image doesn't interfere */
+    }
+    .image-container:hover img {
+        transform: scale(1.03);
+    }
 
-        .nav-menu a {
-            display: block;
-            padding: 0.75rem 1.5rem;
-            color: #000000;
-            text-decoration: none;
-            font-size: 1rem;
-            transition: opacity 0.3s ease;
-        }
+    @keyframes fadeInLeft { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes fadeInRight { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
 
-        .nav-menu a:hover {
-            opacity: 0.5;
-        }
+    /* Vertical Links Section */
+    .links-section { display: flex; justify-content: center; margin-top: 20px; }
+    .vertical-links { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .main-circle {
+      width: 60px; height: 60px; border-radius: 50%; background: #000; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-weight: 500; transition: background 0.3s ease, transform 0.3s ease;
+      pointer-events: auto !important;
+    }
+    .main-circle:hover { background: #333; transform: scale(1.1); }
+    .circle-item { position: relative; width: 50px; height: 50px; }
+    .child-circle { /* This is the anchor tag now */
+      width: 50px; height: 50px; border-radius: 50%; background: #333; color: #fff; /* Add color */
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+      opacity: 0; transform: translateY(-20px) scale(0.8);
+      transition: transform 0.5s cubic-bezier(0.25,0.8,0.25,1), opacity 0.5s ease;
+      cursor: pointer; pointer-events: none; /* Initially non-interactive */
+      text-decoration: none; /* Remove underline */
+    }
+    .vertical-links.active .child-circle {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: auto !important;
+    }
+     .child-circle:hover { /* Hover state for the circle itself */
+         background: #555; /* Example hover */
+     }
 
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 0 3rem;
-        }
+    .child-circle:nth-of-type(1){ transition-delay: 0.1s; }
+    .child-circle:nth-of-type(2){ transition-delay: 0.15s; }
+    .child-circle:nth-of-type(3){ transition-delay: 0.2s; }
+    .child-circle:nth-of-type(4){ transition-delay: 0.25s; }
+    .child-circle:nth-of-type(5){ transition-delay: 0.3s; }
+    .circle-text {
+      position: absolute; left: 60px; top: 50%; transform: translateY(-50%) translateX(-10px);
+      white-space: nowrap; width: 0; opacity: 0; overflow: hidden;
+      transition: width 0.4s cubic-bezier(0.23,1,0.32,1), opacity 0.4s ease, transform 0.4s ease;
+      color: #000;
+      pointer-events: none;
+    }
+    .vertical-links.active .circle-item:hover .circle-text { width: 120px; opacity: 1; transform: translateY(-50%) translateX(0); }
 
-        section {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 8rem 0;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 1s ease, transform 1s ease;
-        }
+    @media (max-width: 768px) {
+       main { padding-top: 70px; } /* More space for header */
+       .hero { min-height: auto; padding-bottom: 20px; } /* Adjust hero */
+       .container { flex-direction: column; align-items: center; text-align: center; padding: 20px; margin-top: 10px; }
+       .content { padding-right: 0; }
+       .content, .image-container { animation: fadeInUp 0.8s ease-out forwards; flex-basis: auto; width: 100%; }
+       .image-container img { margin-top: 20px; max-width: 80%; }
+       @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+       .vertical-links { align-items: center; }
+       .circle-text { position: static; transform: none; margin-top: 5px; width: 0; }
+       .vertical-links.active .circle-item:hover .circle-text { width: 100%; opacity: 1; }
+    }
 
-        section.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    /* Custom Cursor */
+    .custom-cursor {
+      width: 15px; height: 15px; border-radius: 50%; background-color: black;
+      position: fixed; pointer-events: none; /* Cursor MUST NOT block events */
+      transition: opacity 0.1s ease, transform 0.1s ease, background-color 0.2s ease;
+      z-index: 9999; opacity: 1;
+    }
+    .custom-cursor.click { transform: scale(0.8); }
+    .custom-cursor.hover { background-color: rgba(255, 0, 0); }
+    .custom-cursor.hover-blue { background-color: rgb(12, 0, 239); }
 
-        .hero {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .hero-content {
-            text-align: center;
-        }
-
-        .bio-section {
-            display: flex;
-            align-items: flex-start;
-            gap: 2rem;
-            max-width: 700px;
-            margin: 0 auto 2rem;
-            text-align: left;
-        }
-
-        .profile-image {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            object-fit: cover;
-            flex-shrink: 0;
-            opacity: 0;
-            animation: fadeInUp 1s ease 0.4s forwards;
-        }
-
-        h1 {
-            font-size: 6rem;
-            font-weight: 600;
-            letter-spacing: -0.04em;
-            margin-bottom: 2rem;
-            animation: fadeInUp 1.2s ease;
-        }
-
-        .subtitle {
-            font-size: 1.75rem;
-            font-weight: 400;
-            color: #666666;
-            margin-bottom: 3rem;
-            letter-spacing: -0.02em;
-            animation: fadeInUp 1.2s ease 0.2s backwards;
-        }
-
-        .bio {
-            font-size: 1.25rem;
-            font-weight: 300;
-            color: #333333;
-            line-height: 1.8;
-            margin-bottom: 3rem;
-            animation: fadeInUp 1.2s ease 0.4s backwards;
-        }
-
-        .interests-list {
-            font-size: 1rem;
-            color: #666666;
-            font-weight: 400;
-            animation: fadeInUp 1.2s ease 0.6s backwards;
-            text-align: center;
-        }
-
-        .contact {
-            margin-top: 3rem;
-            font-size: 1rem;
-            animation: fadeInUp 1.2s ease 0.8s backwards;
-            text-align: center;
-        }
-
-        .contact a {
-            color: #000000;
-            text-decoration: none;
-            margin-right: 2rem;
-            transition: opacity 0.3s ease;
-        }
-
-        .contact a:hover {
-            opacity: 0.5;
-        }
-
-        h2 {
-            font-size: 3.5rem;
-            font-weight: 600;
-            letter-spacing: -0.03em;
-            margin-bottom: 5rem;
-        }
-
-        .timeline-item {
-            margin-bottom: 5rem;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.8s ease, transform 0.8s ease;
-        }
-
-        .timeline-item.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .timeline-date {
-            font-size: 0.875rem;
-            color: #999999;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin-bottom: 1rem;
-            font-weight: 500;
-        }
-
-        .timeline-title {
-            font-size: 2rem;
-            font-weight: 600;
-            letter-spacing: -0.02em;
-            margin-bottom: 0.5rem;
-        }
-
-        .timeline-subtitle {
-            font-size: 1.25rem;
-            color: #666666;
-            font-weight: 400;
-            margin-bottom: 1.5rem;
-        }
-
-        .timeline-description {
-            font-size: 1.125rem;
-            color: #333333;
-            line-height: 1.8;
-            font-weight: 300;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 0 2rem;
-            }
-
-            h1 {
-                font-size: 3.5rem;
-            }
-
-            h2 {
-                font-size: 2.5rem;
-                margin-bottom: 3rem;
-            }
-
-            .subtitle {
-                font-size: 1.25rem;
-            }
-
-            .bio {
-                font-size: 1.1rem;
-            }
-
-            .bio-section {
-                flex-direction: column;
-                align-items: center;
-                text-align: center;
-            }
-
-            .timeline-title {
-                font-size: 1.5rem;
-            }
-
-            section {
-                padding: 6rem 0;
-            }
-
-            .timeline-item {
-                margin-bottom: 4rem;
-            }
-        }
-    </style>
+  </style>
 </head>
 <body>
+  <!-- Canvas sits behind everything -->
+  <canvas id="ca-background"></canvas>
+
+  <header>
+    <div class="logo">Mehul Nair</div>
     <nav>
-        <button class="menu-toggle" id="menuToggle">☰</button>
-        <div class="nav-menu" id="navMenu">
-            <a href="#home">Home</a>
-            <a href="#research">Research</a>
-            <a href="#experience">Experience</a>
-        </div>
+      <ul>
+        <li><a href="blog.html">Blog</a></li>
+        <li><a href="resume.html">Resume</a></li>
+      </ul>
     </nav>
+  </header>
 
-    <section class="hero" id="home">
-        <div class="container">
-            <div class="hero-content">
-                <h1>Mehul Nair</h1>
-                <p class="subtitle">Materials Science & Nuclear Engineering</p>
-                <div class="bio-section">
-                    <img src="mehul.png" alt="Mehul Nair" class="profile-image">
-                    <p class="bio">I'm a student at UC Berkeley exploring the intersection of materials science, nuclear engineering, and semiconductors. My research spans superconductivity, ferroelectrics, nuclear materials, and advanced imaging techniques.</p>
-                </div>
-                <p class="interests-list">Materials Characterization & Synthesis · Battery & Energy Materials · Semiconductors · Thin Films</p>
-                <div class="contact">
-                    <a href="mailto:mehulnair@berkeley.edu">mehulnair@berkeley.edu</a>
-                    <a href="https://linkedin.com/in/mehnai" target="_blank">LinkedIn</a>
-                </div>
+  <!-- Main content sits above canvas -->
+  <main>
+    <section class="hero">
+      <div class="container"> 
+        <div class="content">
+          <h1>About Mehul Nair</h1>
+          <p>Hey! I'm Mehul, I'm a student at UC Berkeley studying Materials Science and Nuclear Engineering. I've also done a wide variety of research on topics such as: Semiconductors, Superconductivity, Ferroelectrics, Nuclear Materials and more! Outside of research, I have worked in a consulting capacity on climate, sustainability and consumer technology.</p>
+          <div class="links-section">
+            <div class="vertical-links" id="verticalLinks">
+              <div class="main-circle" id="mainCircle">+</div>
+              <div class="circle-item"><a class="child-circle" href="https://linkedin.com/in/mehnai" target="_blank">L</a><span class="circle-text">LinkedIn</span></div>
+              <div class="circle-item"><a class="child-circle" href="https://scholar.google.com/citations?user=tQHms7EAAAAJ&hl=en" target="_blank">S</a><span class="circle-text">Scholar</span></div>
+              <div class="circle-item"><a class="child-circle" href="resume.html">R</a><span class="circle-text">Resume</span></div>
+              <div class="circle-item"><a class="child-circle" href="mailto:mehulnair2005@gmail.com">E</a><span class="circle-text">Email</span></div>
+              <div class="circle-item"><a class="child-circle" href="blog.html">B</a><span class="circle-text">Blog</span></div>
             </div>
+          </div>
         </div>
-    </section>
-
-    <section id="research">
-        <div class="container">
-            <h2>Research</h2>
-            
-            <div class="timeline-item">
-                <p class="timeline-date">Jan 2025 – Present</p>
-                <h3 class="timeline-title">Center for Complex & Active Materials</h3>
-                <p class="timeline-subtitle">UCI · Prof. Xiaoqing Pan</p>
-                <p class="timeline-description">Assisting in an exploratory study on ptychography applications and improvements to current algorithms. Developing novel ptychographic methods for STEM images allowing for effective reconstruction of small samples.</p>
-            </div>
-
-            <div class="timeline-item">
-                <p class="timeline-date">Oct 2023 – Present</p>
-                <h3 class="timeline-title">Superconducting Magnet Program</h3>
-                <p class="timeline-subtitle">LBNL · Dr. Tengming Shen</p>
-                <p class="timeline-description">Developed a low-level quench detection system using LabVIEW FPGA and integrated it into the Superconducting Magnet testing facility. Currently working on magnet design and cable properties projects for BSSCO magnets. Created a novel metrology system that beat state-of-the-art sensitivity by a factor of 1000.</p>
-            </div>
-
-            <div class="timeline-item">
-                <p class="timeline-date">Sep 2022 – Present</p>
-                <h3 class="timeline-title">Nuclear Materials Group</h3>
-                <p class="timeline-subtitle">UC Berkeley · Prof. Peter Hosemann</p>
-                <p class="timeline-description">Conducting advanced failure analysis and characterization on additively manufactured steel for mechanical property analysis. Studying radiation effects in future fusion materials and evaluating irradiation impacts on mechanical properties of epoxies for superconducting magnets.</p>
-            </div>
-
-            <div class="timeline-item">
-                <p class="timeline-date">Jun 2024 – Aug 2024</p>
-                <h3 class="timeline-title">Center for Complex & Active Materials</h3>
-                <p class="timeline-subtitle">UCI · Prof. Xiaoqing Pan</p>
-                <p class="timeline-description">Applied image processing methods to refine electron microscope images to improve atomic-position determination and measure polarization in ferroelectric lattices. Improved atomic precision by 100% and polarization map uniformity by 40%, enabling oxygen fitting for the first time in certain ferroelectric interfaces.</p>
-            </div>
-
-            <div class="timeline-item">
-                <p class="timeline-date">Mar 2023 – Mar 2024</p>
-                <h3 class="timeline-title">Applied Nuclear Physics Program</h3>
-                <p class="timeline-subtitle">LBNL · Prof. Kai Vetter</p>
-                <p class="timeline-description">Tested novel reconstruction algorithms for low-noise near-field imaging of medical radioactive sources. Implemented reconstruction using Gaussian Process Prior to reconstruct medical phantoms imaged in 3D space using coded aperture.</p>
-            </div>
+        <div class="image-container">
+          <img src="mehulprofile.jpg" alt="Mehul Nair"/>
         </div>
+      </div>
     </section>
+  </main>
 
-    <section id="experience">
-        <div class="container">
-            <h2>Work Experience</h2>
-            
-            <div class="timeline-item">
-                <p class="timeline-date">Summer 2025</p>
-                <h3 class="timeline-title">Taiwan Semiconductor Manufacturing Corporation</h3>
-                <p class="timeline-subtitle">Epitaxy Process Engineering Intern</p>
-                <p class="timeline-description">Performed large-scale data analysis to resolve epitaxial growth quality issues. Conducted experiments using 50+ DOE conditions to optimize epitaxy processes for chip production. Implemented process modifications improving a key performance indicator by 35% and stability by 53%, earning finalist status in a 200-intern competition.</p>
-            </div>
+  <!-- Custom cursor element -->
+  <div class="custom-cursor" id="customCursor"></div>
 
-            <div class="timeline-item">
-                <p class="timeline-date">Aug 2024 – Feb 2025</p>
-                <h3 class="timeline-title">Goodwater Capital</h3>
-                <p class="timeline-subtitle">Senior Student Consultant</p>
-                <p class="timeline-description">Conducted market analysis across nine regions utilizing 25+ databases and reports to identify growth opportunities. Gathered and processed data for 15 key metrics across various regions, condensing information into regional plans. Created detailed visualizations to recommend four strategic investment opportunities.</p>
-            </div>
+  <script>
+    // --- UI Script ---
+    const cursor = document.getElementById('customCursor');
+    let isHoveringBlueCell = false; // Track hover state specifically for the blue cell
 
-            <div class="timeline-item">
-                <p class="timeline-date">Jan 2024 – May 2024</p>
-                <h3 class="timeline-title">Climeworks</h3>
-                <p class="timeline-subtitle">Student Consultant</p>
-                <p class="timeline-description">Analyzed market expansion possibilities for the Carbon Dioxide Removal market through stakeholder interviews and industry ESG commitment research. Managed Climeworks' top 100 Salesforce accounts, assessing CDR adoption through climate maturity. Investigated decision-making hierarchies and developed strategic sales frameworks.</p>
-            </div>
+    document.addEventListener('mousemove', e => {
+      cursor.style.left = e.clientX + 'px';
+      cursor.style.top = e.clientY + 'px';
+      cursor.style.opacity = '1';
+      // Specific hover class changes (hover-blue, hover) are handled
+      // by the element-specific listeners below (canvas, links, etc.)
+    });
+    document.addEventListener('mousedown', () => cursor.classList.add('click'));
+    document.addEventListener('mouseup', () => cursor.classList.remove('click'));
 
-            <div class="timeline-item">
-                <p class="timeline-date">Aug 2023 – Dec 2023</p>
-                <h3 class="timeline-title">Kiss The Ground</h3>
-                <p class="timeline-subtitle">Student Consultant</p>
-                <p class="timeline-description">Conducted in-depth product analysis to refine a B2B model for scaling penetration in the EdTech market. Developed go-to-market strategy by creating case studies on ESG and CSR-focused companies. Redesigned the website to enhance user engagement and retention.</p>
-            </div>
-        </div>
-    </section>
+    // Standard hover effect for interactive elements (links, buttons, etc.)
+    document.querySelectorAll('a, .main-circle, .child-circle, .logo').forEach(el => {
+      el.addEventListener('mouseenter', () => {
+          // Only show standard red hover if NOT hovering the special blue cell
+          if (!isHoveringBlueCell) {
+              cursor.classList.add('hover');
+          }
+      });
+      el.addEventListener('mouseleave', () => {
+          // Always remove standard hover on mouseleave from these elements
+          cursor.classList.remove('hover');
+      });
+    });
 
-    <script>
-        // Menu toggle
-        const menuToggle = document.getElementById('menuToggle');
-        const navMenu = document.getElementById('navMenu');
+    window.addEventListener('mouseout', e => { if (!e.relatedTarget && !e.toElement) { cursor.style.opacity = '0'; } });
+    window.addEventListener('mouseover', () => { cursor.style.opacity = '1'; });
 
-        menuToggle.addEventListener('click', () => {
-            navMenu.classList.toggle('active');
-        });
+    // Vertical links toggle
+    document.getElementById('mainCircle').addEventListener('click', (event) => {
+        event.stopPropagation(); // Prevent click from potentially closing menu immediately if mouse moved slightly
+        document.getElementById('verticalLinks').classList.toggle('active');
+    });
 
-        // Close menu when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!menuToggle.contains(e.target) && !navMenu.contains(e.target)) {
-                navMenu.classList.remove('active');
+    // Highlight effect on click for nav links and child circles
+    document.querySelectorAll('nav a, .child-circle').forEach(link => {
+      link.addEventListener('click', function(e) {
+        // If it's a child circle, the click might be on the outer div or inner link.
+        // We only want to highlight and let navigation happen.
+        let targetElement = e.target.closest('.child-circle') || e.target.closest('nav a');
+        if (targetElement) {
+            targetElement.classList.add('highlight');
+            setTimeout(() => {
+                 if (targetElement) targetElement.classList.remove('highlight');
+            }, 300);
+        }
+        // Don't stop propagation here unless needed, allow links to navigate
+      });
+    });
+
+    // --- Custom 2D Cellular Automaton Script ---
+    document.addEventListener('DOMContentLoaded', () => {
+      const canvas = document.getElementById('ca-background');
+      const ctx = canvas.getContext('2d');
+
+      // --- CA Settings ---
+      const cellSize = 15;
+      const cellColor = '#EEEEEE';
+      const bgColor = '#FFFFFF';
+      const blueColor = '#5DADE2';
+      const updateInterval = 800; // Slower update
+      const initialDensity = 0.15;
+      const blueCellDuration = 10000; // 10 seconds
+
+      let cols, rows;
+      let grid;
+      let intervalId; // Removed nextGrid, calculate directly
+      let blueCellCoords = null; // {x, y} grid coords
+      let blueCellRect = null; // {x, y, width, height} screen coords
+      let blueCellTimestamp = 0;
+
+      function resizeCanvas() {
+        cols = Math.ceil(window.innerWidth / cellSize);
+        rows = Math.ceil(window.innerHeight / cellSize);
+        // Ensure canvas covers viewport even if body content is short
+        const W = window.innerWidth;
+        const H = window.innerHeight;
+        if (canvas.width !== W) canvas.width = W;
+        if (canvas.height !== H) canvas.height = H;
+      }
+
+      function applyRules(x, y) {
+          const neighbors = countNeighbors(x, y);
+          // Ensure grid[y] and grid[y][x] exist before accessing state
+          const isAlive = grid[y]?.[x] === 1;
+          if (isAlive && (neighbors === 2 || neighbors === 3)) return 1;
+          if (!isAlive && (neighbors === 3 || neighbors === 6)) return 1;
+          return 0;
+      }
+
+      function countNeighbors(x, y) {
+          let count = 0;
+          for (let dy = -1; dy <= 1; dy++) {
+              for (let dx = -1; dx <= 1; dx++) {
+                  if (dx === 0 && dy === 0) continue;
+                  // Check bounds before accessing grid to prevent errors during resize/init
+                  const nx = (x + dx + cols) % cols;
+                  const ny = (y + dy + rows) % rows;
+                  if (grid[ny]?.[nx] !== undefined) {
+                     count += grid[ny][nx];
+                  }
+              }
+          }
+          return count;
+      }
+
+      function findNewBlueCell(targetGrid, excludeCoords = null) {
+            const liveCells = [];
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                     // Check if cell exists and is alive
+                    if (targetGrid[y]?.[x] === 1) {
+                         if (!excludeCoords || x !== excludeCoords.x || y !== excludeCoords.y) {
+                             liveCells.push({ x, y });
+                         }
+                    }
+                }
             }
-        });
+             // If only the excluded cell is alive, allow picking it anyway
+            if (liveCells.length === 0 && excludeCoords && targetGrid[excludeCoords.y]?.[excludeCoords.x] === 1) {
+                return excludeCoords;
+            }
+            if (liveCells.length > 0) {
+                return liveCells[Math.floor(Math.random() * liveCells.length)];
+            }
+            return null; // No suitable cell found
+       }
 
-        // Close menu when clicking a link
-        document.querySelectorAll('.nav-menu a').forEach(link => {
-            link.addEventListener('click', () => {
-                navMenu.classList.remove('active');
-            });
-        });
+      function updateAutomaton() {
+          const now = Date.now();
+          let needsNewBlueCell = false;
+          let timerExpired = false;
 
-        // Intersection observer for animations
-        const observerOptions = {
-            threshold: 0.2,
-            rootMargin: '0px 0px -100px 0px'
-        };
+          if (blueCellCoords && now - blueCellTimestamp >= blueCellDuration) {
+              timerExpired = true;
+              needsNewBlueCell = true;
+          }
 
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                }
-            });
-        }, observerOptions);
+          let nextGrid = Array(rows).fill(null).map(() => Array(cols).fill(0)); // Create new grid for next state
 
-        document.querySelectorAll('section, .timeline-item').forEach(el => {
-            observer.observe(el);
-        });
+          for (let y = 0; y < rows; y++) {
+              for (let x = 0; x < cols; x++) {
+                   if (grid[y]?.[x] !== undefined) { // Check current grid cell exists before applying rules
+                       nextGrid[y][x] = applyRules(x, y);
+                   } else {
+                       nextGrid[y][x] = 0; // Default to dead if current cell doesn't exist
+                   }
+              }
+          }
 
-        // Smooth scrolling
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            });
-        });
-    </script>
+          // Check potential death only if blue cell coords are valid for nextGrid dimensions
+          if (blueCellCoords && !timerExpired && nextGrid[blueCellCoords.y]?.[blueCellCoords.x] === 0) {
+              needsNewBlueCell = true;
+          }
+
+          // Force alive or handle invalid coords
+          if (blueCellCoords && !needsNewBlueCell) {
+              if (nextGrid[blueCellCoords.y]?.[blueCellCoords.x] !== undefined) {
+                  nextGrid[blueCellCoords.y][blueCellCoords.x] = 1; // Force alive
+              } else {
+                  // Coords became invalid (e.g. after resize), needs new cell
+                  needsNewBlueCell = true;
+                  blueCellCoords = null; // Invalidate current coords
+              }
+          }
+
+          // Find new cell if needed
+          if (needsNewBlueCell) {
+              const oldCoords = blueCellCoords;
+              const newCoords = findNewBlueCell(nextGrid, oldCoords); // Find in the grid *we just calculated*
+              if (newCoords) {
+                   blueCellCoords = newCoords;
+                   blueCellTimestamp = now; // Reset timer
+                   // Ensure the newly selected cell is marked alive in the next grid state
+                   if (nextGrid[blueCellCoords.y]?.[blueCellCoords.x] !== undefined) {
+                       nextGrid[blueCellCoords.y][blueCellCoords.x] = 1;
+                   }
+              } else { // Extinction or unable to find replacement
+                   blueCellCoords = null;
+                   blueCellTimestamp = 0;
+              }
+          } else if (!blueCellCoords) { // Try find initial/replacement if none exists
+               const newCoords = findNewBlueCell(nextGrid);
+               if (newCoords) {
+                   blueCellCoords = newCoords;
+                   blueCellTimestamp = now;
+                   if (nextGrid[blueCellCoords.y]?.[blueCellCoords.x] !== undefined) {
+                       nextGrid[blueCellCoords.y][blueCellCoords.x] = 1; // Ensure it's marked alive
+                   }
+               }
+          }
+
+          grid = nextGrid; // Update grid AFTER all calculations for the next state are done
+
+          // Update screen rect based on final blueCellCoords
+          if (blueCellCoords) {
+              // Check if coords are still valid for the current grid dimensions
+              if(grid[blueCellCoords.y]?.[blueCellCoords.x] !== undefined) {
+                  blueCellRect = {
+                      x: blueCellCoords.x * cellSize, y: blueCellCoords.y * cellSize,
+                      width: cellSize, height: cellSize
+                  };
+              } else {
+                  // Coords invalid, likely due to resize. Clear rect.
+                  blueCellCoords = null;
+                  blueCellRect = null;
+                  blueCellTimestamp = 0;
+              }
+          } else {
+              blueCellRect = null;
+          }
+      }
+
+      function drawAutomaton() {
+        // Clear only the necessary area
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw regular cells
+        ctx.fillStyle = cellColor;
+        for (let y = 0; y < rows; y++) {
+          for (let x = 0; x < cols; x++) {
+             // Check if cell exists and is alive in the current grid
+            if (grid[y]?.[x] === 1) {
+              // Only draw if it's NOT the blue cell
+              if (!blueCellCoords || x !== blueCellCoords.x || y !== blueCellCoords.y) {
+                ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+              }
+            }
+          }
+        }
+
+        // Draw blue cell on top if its coordinates are valid and it's alive
+        if (blueCellCoords && grid[blueCellCoords.y]?.[blueCellCoords.x] === 1) {
+          ctx.fillStyle = blueColor;
+          ctx.fillRect(blueCellCoords.x * cellSize, blueCellCoords.y * cellSize, cellSize, cellSize);
+        }
+      }
+
+      function gameLoop() {
+        updateAutomaton();
+        drawAutomaton();
+      }
+
+      function initAutomaton() {
+        if (intervalId) clearInterval(intervalId);
+        resizeCanvas(); // Set canvas size and grid dimensions first
+
+        // Initialize grid based on new dimensions
+        grid = Array(rows).fill(null).map(() => Array(cols).fill(0));
+
+        let liveCellsForBlue = [];
+        for (let y = 0; y < rows; y++) {
+          for (let x = 0; x < cols; x++) {
+            if (Math.random() < initialDensity) {
+              grid[y][x] = 1;
+              liveCellsForBlue.push({ x, y });
+            }
+          }
+        }
+
+        // Reset blue cell state
+        blueCellCoords = null;
+        blueCellTimestamp = 0;
+        blueCellRect = null;
+
+        // Assign initial blue cell if possible
+        if (liveCellsForBlue.length > 0) {
+            blueCellCoords = liveCellsForBlue[Math.floor(Math.random() * liveCellsForBlue.length)];
+            blueCellTimestamp = Date.now();
+            // Calculate initial rect based on the assigned coords
+             if(grid[blueCellCoords.y]?.[blueCellCoords.x] !== undefined){ // Check coords valid
+                 blueCellRect = {
+                     x: blueCellCoords.x * cellSize, y: blueCellCoords.y * cellSize,
+                     width: cellSize, height: cellSize
+                 };
+             } else { // Should be rare, but handle if random coords somehow invalid
+                 blueCellCoords = null;
+                 blueCellTimestamp = 0;
+             }
+        }
+
+        // Start the loop
+        intervalId = setInterval(gameLoop, updateInterval);
+      }
+
+      // --- Event Listeners ---
+      window.addEventListener('resize', initAutomaton);
+
+      // <<< CLICK LISTENER ON BODY >>>
+      document.body.addEventListener('click', (event) => {
+         // Check only if a blue cell exists visually (rect is calculated)
+         if (!blueCellRect) return;
+
+         // Use viewport coordinates directly
+         const clickX = event.clientX;
+         const clickY = event.clientY;
+
+         // Check if click is within the blue cell screen bounds
+         if (
+           clickX >= blueCellRect.x &&
+           clickX < blueCellRect.x + blueCellRect.width &&
+           clickY >= blueCellRect.y &&
+           clickY < blueCellRect.y + blueCellRect.height
+         ) {
+             // Check if the click target isn't already an interactive element
+             const targetElement = document.elementFromPoint(clickX, clickY);
+             // Allow click if target is canvas itself OR body (meaning nothing else is there)
+             if (targetElement === canvas || targetElement === document.body || !targetElement.closest('a, button, .main-circle, .child-circle, input, textarea, select')) {
+                  console.log("Blue cell click SUCCESSFUL! Redirecting...");
+                  event.preventDefault(); // Prevent potential default actions on body/canvas
+                  event.stopPropagation(); // Stop further propagation
+                  window.location.href = 'automata.html';
+             } else {
+                 console.log("Click hit another interactive element over blue cell area.");
+             }
+         } else {
+             // Click was somewhere else on the body
+         }
+      });
+
+      // Hover effect handling still on canvas (more efficient)
+      canvas.addEventListener('mousemove', (event) => {
+           let isOver = false;
+           if (blueCellRect) {
+                // Need canvas relative coords for hover check if rect is based on canvas
+                const rect = canvas.getBoundingClientRect(); // Get canvas position
+                const mouseX = event.clientX - rect.left;
+                const mouseY = event.clientY - rect.top;
+
+                 // Check using calculated mouse position relative to canvas
+                 // against the blueCellRect (which is also relative to canvas 0,0)
+                isOver = mouseX >= blueCellRect.x && mouseX < blueCellRect.x + blueCellRect.width &&
+                         mouseY >= blueCellRect.y && mouseY < blueCellRect.y + blueCellRect.height;
+           }
+
+           // --- Logic to Add/Remove hover-blue class ---
+           if (isOver) {
+               if (!isHoveringBlueCell) { // Just entered blue cell area
+                    isHoveringBlueCell = true;
+                    cursor.classList.remove('hover'); // Remove standard hover if active
+                    cursor.classList.add('hover-blue'); // Add blue hover
+               }
+           } else {
+               if (isHoveringBlueCell) { // Just left blue cell area
+                    isHoveringBlueCell = false;
+                    cursor.classList.remove('hover-blue'); // Remove blue hover
+                    // Check if mouse is now over a standard interactive element
+                    const targetElement = document.elementFromPoint(event.clientX, event.clientY);
+                    if (targetElement && targetElement.closest('a, .main-circle, .child-circle, .logo')) {
+                       cursor.classList.add('hover'); // Add standard hover back
+                    }
+               }
+           }
+           // ---------------------------------------------
+      });
+
+       // Ensure hover state is reset if mouse leaves canvas entirely
+       canvas.addEventListener('mouseleave', () => {
+            if (isHoveringBlueCell) { // If leaving canvas while hovering blue cell
+                isHoveringBlueCell = false;
+                cursor.classList.remove('hover-blue');
+            }
+       });
+
+      // --- Initial Run ---
+      initAutomaton();
+    });
+  </script>
 </body>
 </html>

@@ -1,0 +1,729 @@
+/* Import 'Roboto Mono' and 'Roboto' fonts from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Roboto:wght@400;700&display=swap');
+
+/* Import 'Ailerons' font */
+@font-face {
+    font-family: 'Ailerons';
+    src: url('Fonts/Ailerons-Typeface.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap; /* Improves loading performance */
+}
+
+/* Basic Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body Styling */
+body {
+    font-family: 'Roboto Mono', monospace;
+    color: #f0f0f0;
+    background-color: #121212;
+    line-height: 1.6;
+    scroll-behavior: smooth;
+    min-height: 100vh; /* Ensure body takes full viewport height */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Navigation Bar */
+nav {
+    background-color: #1e1e1e;
+    padding: 1rem 2rem;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    border-bottom: 1px solid #333;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    animation: slideDown 0.5s ease-out;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+nav .logo {
+    font-family: 'Ailerons', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #fff;
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    align-items: center;
+}
+
+nav li {
+    margin-left: 1.5rem;
+}
+
+nav a {
+    text-decoration: none;
+    color: #f0f0f0;
+    font-size: 16px;
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+nav a.active,
+nav a:hover,
+nav a:focus {
+    color: #00bcd4;
+}
+
+/* Loading Screen */
+#loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #121212;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    z-index: 999;
+    transition: opacity 0.5s ease-out;
+}
+
+#loading-screen .loading-content h2 {
+    color: #00bcd4;
+    font-size: 20px; /* Decreased font size */
+    margin-bottom: 1rem;
+    text-align: center; /* Center the text */
+    font-family: 'Roboto', sans-serif; /* Cleaner font */
+    animation: typing 2s steps(20) 0.5s forwards;
+    white-space: nowrap;
+    overflow: hidden;
+    position: relative;
+}
+
+.loading-content h2::after {
+    content: "_";
+    animation: blink 1s infinite;
+}
+
+/* Terminal Container */
+#terminal-container.hidden {
+    display: none;
+}
+
+#terminal-container {
+    flex-grow: 1;
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    margin-top: 60px; /* Add margin to account for fixed navbar */
+}
+
+#terminal {
+    background-color: rgba(30, 30, 30, 0.8); /* White background */
+    color: #f0f0f0; /* Text color should be light for dark background */
+    width: 100%;
+    max-width: 800px;
+    height: 80vh;
+    padding: 1rem;
+    font-size: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+#terminal #output {
+    flex: 1;
+    white-space: pre-wrap;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+#terminal #input-line {
+    display: flex;
+    align-items: center;
+    position: relative; /* For autocomplete positioning */
+}
+
+#terminal .prompt {
+    color: #00bcd4;
+    margin-right: 0.5rem;
+}
+
+#terminal #command-input {
+    background-color: transparent;
+    border: none;
+    color: #f0f0f0;
+    padding: 5px 0;
+    flex: 1;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 16px;
+    caret-color: #f0f0f0;
+    outline: none;
+}
+
+/* Command responses */
+.response {
+    margin: 0.5rem 0;
+    padding-left: 1rem;
+}
+
+.error {
+    color: #ff5252;
+}
+
+.success {
+    color: #4caf50;
+}
+
+.highlight {
+    color: #00bcd4;
+}
+
+/* Autocomplete Suggestions */
+#autocomplete-list {
+    position: absolute;
+    top: 100%; /* Position below the input line */
+    left: 0;
+    right: 0;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 1001;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 0 0 5px 5px;
+    display: none;
+}
+
+.suggestion {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+}
+
+.suggestion:hover,
+.suggestion.active {
+    background-color: #3a3a3a;
+}
+
+/* Experience Widget */
+.experience-widget {
+    border: 1px solid #444;
+    padding: 20px; /* Increased padding for better spacing */
+    margin: 16px 0;
+    border-radius: 10px; /* Slightly larger border-radius for a smoother look */
+    background-color: #2a2a2a; /* Lighter background for better contrast */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition effects */
+}
+
+.experience-widget:hover {
+    transform: translateY(-5px); /* Slight lift on hover for interactivity */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Enhanced shadow on hover */
+}
+
+/* Experience Title */
+.experience-title {
+    font-family: 'Roboto Mono', sans-serif; /* Apply 'Ailerons' font */
+    font-size: 1.8em; /* Increased font size for prominence */
+    margin-bottom: 12px; /* Additional spacing below the title */
+    color: #f0f0f0; /* Darker color for better readability */
+}
+
+/* Experience Summary */
+.experience-summary {
+    font-style: italic;
+    margin-bottom: 12px;
+    color: #ccc; /* Slightly lighter color for the summary */
+}
+
+/* Experience Details */
+.experience-details {
+    list-style-type: disc;
+    padding-left: 25px; /* Increased padding for better alignment */
+    color: #f0f0f0; /* Consistent text color */
+}
+
+.experience-details li {
+    margin-bottom: 8px;
+    line-height: 1.5; /* Improved readability */
+}
+
+/* About Me Widget */
+.about-me-widget {
+    border: 1px solid #444;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+    border-radius: 8px;
+    background-color: #2a2a2a;
+}
+
+.about-me-widget img {
+    width: 200px; /* Larger image */
+    height: 200px;
+    border-radius: 50%;
+    margin-right: 20px;
+    object-fit: cover;
+}
+
+.about-me-widget .about-text {
+    font-size: 16px;
+    line-height: 1.5;
+    color: #f0f0f0;
+}
+
+/* Resume Header */
+.resume-header {
+    text-align: center;
+    padding: 120px 20px 60px 20px; /* Adjust padding for fixed nav */
+    background-color: #1e1e1e;
+    animation: fadeIn 1s ease-in-out;
+}
+
+.resume-header h1 {
+    font-family: 'Ailerons', sans-serif;
+    font-size: 48px;
+    margin-bottom: 10px;
+    color: #f0f0f0;
+    animation: fadeInUp 1s ease-in-out;
+}
+
+.resume-header .contact-info {
+    font-size: 18px;
+    color: #ccc;
+    margin-top: 10px;
+    animation: fadeIn 1s ease-in-out 0.5s both;
+}
+
+.resume-header .contact-info a {
+    color: #f0f0f0;
+    text-decoration: none;
+    margin: 0 10px;
+    transition: color 0.3s;
+}
+
+.resume-header .contact-info a:hover,
+.resume-header .contact-info a:focus {
+    color: #00bcd4;
+}
+
+/* Main Content */
+main {
+    padding: 80px 30px 50px;
+    max-width: 1200px;
+    margin: 0 auto;
+    animation: fadeIn 1s ease-in-out;
+    flex: 1; /* Allow main to grow and push footer to bottom */
+}
+
+/* Section Titles */
+section h2 {
+    font-size: 32px;
+    margin-bottom: 30px;
+    text-align: center;
+    position: relative;
+    font-family: 'Ailerons', sans-serif;
+    color: #f0f0f0;
+    animation: fadeInDown 1s ease-in-out;
+}
+
+/* Section Content */
+.section-content .item {
+    margin-bottom: 40px;
+}
+
+.item h3,
+.item h4 {
+    font-size: 24px;
+    margin-bottom: 5px;
+    font-weight: 700;
+    color: #f0f0f0;
+}
+
+.item p {
+    font-size: 16px;
+    margin-bottom: 5px;
+    color: #f0f0f0;
+}
+
+.item ul {
+    list-style-type: disc;
+    padding-left: 20px;
+}
+
+.item ul li {
+    margin-bottom: 8px;
+    font-size: 16px;
+    color: #f0f0f0;
+}
+
+/* Courses List */
+.courses {
+    list-style-type: circle;
+    padding-left: 20px;
+    columns: 2;
+    color: #f0f0f0;
+}
+
+.courses li {
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+
+/* Experience Section - Apple-like Styling */
+.tab-container {
+    width: 100%;
+    margin: 40px 0;
+}
+
+.tab-buttons {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 40px;
+    flex-wrap: wrap; /* Allows buttons to wrap on smaller screens */
+    position: relative;
+}
+
+.tab-buttons::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background-color: #e0e0e0;
+}
+
+.tab-button {
+    background-color: transparent;
+    border: none;
+    padding: 15px 30px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.4s cubic-bezier(0.42, 0, 0.58, 1);
+    outline: none;
+    margin: 0 10px;
+    color: #1d1d1f;
+    position: relative;
+    font-family: 'Roboto', sans-serif;
+    letter-spacing: -0.01em;
+}
+
+.tab-button:hover,
+.tab-button:focus {
+    color: #0066cc;
+}
+
+.tab-button::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -10px;
+    width: 100%;
+    height: 2px;
+    background-color: #0066cc;
+    transform: scaleX(0);
+    transition: transform 0.4s cubic-bezier(0.42, 0, 0.58, 1);
+}
+
+.tab-button.active {
+    color: #0066cc;
+}
+
+.tab-button.active::after {
+    transform: scaleX(1);
+}
+
+.tab-content {
+    position: relative;
+    overflow: hidden;
+}
+
+.tab-content .tab-pane {
+    display: none;
+    animation: tabFadeIn 0.6s cubic-bezier(0.42, 0, 0.58, 1);
+    position: relative;
+}
+
+.tab-content .tab-pane.active {
+    display: block;
+}
+
+/* Apple-like Item Styling */
+.item {
+    background-color: #fff;
+    border-radius: 18px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+.item h4 {
+    font-size: 22px;
+    margin-bottom: 10px;
+    color: #1d1d1f;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+.item p em {
+    color: #6e6e73;
+    font-style: normal;
+    font-weight: 400;
+}
+
+.item ul {
+    margin-top: 15px;
+}
+
+.item ul li {
+    color: #1d1d1f;
+    line-height: 1.6;
+}
+
+/* Publications Section */
+.publication-list {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.publication-item {
+    width: 100%;
+    max-width: 800px;
+}
+
+.publication-item a {
+    text-decoration: none;
+    font-size: 18px;
+    color: #1d1d1f;
+    background-color: #f5f5f7;
+    padding: 20px 30px;
+    display: block;
+    text-align: center;
+    border-radius: 14px;
+    transition: all 0.3s cubic-bezier(0.42, 0, 0.58, 1);
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.publication-item a::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #0066cc, #5ac8fa);
+    z-index: -1;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.5s cubic-bezier(0.42, 0, 0.58, 1);
+}
+
+.publication-item a:hover,
+.publication-item a:focus {
+    color: #fff;
+}
+
+.publication-item a:hover::before,
+.publication-item a:focus::before {
+    transform: scaleX(1);
+}
+
+/* Skills Section */
+.skills-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 30px;
+}
+
+.skill-category {
+    width: calc(33.333% - 20px);
+    background-color: #fff;
+    border-radius: 18px;
+    padding: 30px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease;
+}
+
+.skill-category:hover {
+    transform: translateY(-5px);
+}
+
+.skill-category h3 {
+    font-family: 'Ailerons', sans-serif;
+    font-size: 22px;
+    margin-bottom: 15px;
+    color: #1d1d1f;
+    position: relative;
+    padding-bottom: 10px;
+}
+
+.skill-category h3::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background-color: #0066cc;
+}
+
+.skill-category p {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #1d1d1f;
+}
+
+/* New Tab Animations */
+@keyframes tabFadeIn {
+    from { 
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes typing {
+    from { width: 0; }
+    to { width: 100%; }
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* Utility classes */
+.hidden {
+    display: none;
+}
+
+/* Responsive Styles */
+@media (max-width: 900px) {
+    #terminal {
+        height: 70vh;
+    }
+    
+    #terminal-container {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    nav {
+        padding: 0.8rem 1.5rem;
+    }
+    
+    nav ul {
+        flex-direction: column;
+        align-items: flex-end;
+    }
+
+    nav li {
+        margin-left: 0;
+        margin-top: 5px;
+    }
+    
+    #terminal-container {
+        padding: 1rem;
+        margin-top: 80px;
+    }
+    
+    #terminal {
+        height: 60vh;
+    }
+    
+    .about-me-widget {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .about-me-widget img {
+        margin-right: 0;
+        margin-bottom: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    nav .logo {
+        font-size: 1.2rem;
+    }
+    
+    #terminal-container {
+        padding: 0.5rem;
+    }
+    
+    #terminal {
+        padding: 0.8rem;
+        height: 70vh;
+    }
+    
+    .experience-title {
+        font-size: 1.4em;
+    }
+}
