@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mehul Nair</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Libre+Franklin:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -11,610 +14,445 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --paper: #FFFFFF;
+            --text: #1a1a1a;
+            --accent: #E63946;
+            --muted: #6B7280;
+            --border: #D1D5DB;
+        }
+
+        ::selection {
+            background: rgba(230, 57, 70, 0.2);
+            color: var(--text);
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Helvetica Neue', sans-serif;
-            background: #ffffff;
-            color: #000000;
-            line-height: 1.6;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
+            font-family: 'EB Garamond', serif;
+            background: var(--paper);
+            color: var(--text);
+            line-height: 1.8;
+            font-size: 18px;
+            position: relative;
         }
 
-        nav {
+        body::before {
+            content: '';
             position: fixed;
-            top: 2rem;
-            right: 2rem;
-            z-index: 1000;
-        }
-
-        .menu-toggle {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 0.5rem;
-            color: #000000;
-            transition: opacity 0.2s ease;
-        }
-
-        .menu-toggle:hover {
-            opacity: 0.5;
-        }
-
-        .nav-menu {
-            position: absolute;
-            top: 3rem;
-            right: 0;
-            background: #ffffff;
-            border: 1px solid #e0e0e0;
-            padding: 1rem 0;
-            min-width: 150px;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
-        }
-
-        .nav-menu.active {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-
-        .nav-menu a {
-            display: block;
-            padding: 0.75rem 1.5rem;
-            color: #000000;
-            text-decoration: none;
-            font-size: 1rem;
-            transition: opacity 0.2s ease;
-        }
-
-        .nav-menu a:hover {
-            opacity: 0.5;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.015;
+            pointer-events: none;
+            z-index: 1;
         }
 
         .container {
             max-width: 900px;
             margin: 0 auto;
-            padding: 0 3rem;
+            padding: 80px 60px;
+            position: relative;
+            z-index: 2;
         }
 
-        section {
-            display: flex;
-            flex-direction: column;
-            padding: 2.5rem 0;
+        /* Navigation with arrow */
+        nav {
+            position: fixed;
+            top: 40px;
+            right: 60px;
+            z-index: 100;
+            font-family: 'Libre Franklin', sans-serif;
+            font-size: 14px;
+            font-weight: 400;
+            letter-spacing: 0.3px;
+        }
+
+        nav a {
+            color: var(--text);
+            text-decoration: none;
+            margin-left: 30px;
+            position: relative;
+            transition: color 0.2s ease;
+            font-weight: 400;
+        }
+
+        /* Override bracket link style for nav */
+        nav a::before {
+            content: '▸';
+            position: absolute;
+            left: -12px;
             opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.4s ease, transform 0.4s ease;
+            transition: all 0.2s ease;
+            font-family: 'IBM Plex Mono', monospace;
+            color: var(--accent);
+            margin: 0;
         }
 
-        section.visible {
+        nav a::after {
+            content: none;
+            display: none;
+        }
+
+        nav a:hover {
+            color: var(--accent);
+            background: none;
+            padding: 0;
+            margin-left: 30px;
+            margin-right: 0;
+        }
+
+        nav a:hover::before {
             opacity: 1;
-            transform: translateY(0);
-        }
-
-        .hero {
-            padding: 6rem 0 3rem 0;
-            display: flex;
-            align-items: flex-start;
-        }
-
-        .hero-content {
-            text-align: left;
-            width: 100%;
-        }
-
-        .bio-section {
-            display: flex;
-            align-items: flex-start;
-            gap: 1.5rem;
-            margin: 0 0 1.5rem 0;
-            text-align: left;
-        }
-
-        .profile-image {
-            width: 90px;
-            height: 90px;
-            border-radius: 2px;
-            object-fit: cover;
-            flex-shrink: 0;
-            opacity: 0;
-            animation: fadeInUp 0.4s ease 0.2s forwards;
+            left: -15px;
         }
 
         h1 {
-            font-size: 3.5rem;
-            font-weight: 600;
-            letter-spacing: -0.03em;
-            margin-bottom: 0.5rem;
-            animation: fadeInUp 0.45s ease;
-        }
-
-        .subtitle {
-            font-size: 1.2rem;
-            font-weight: 400;
-            color: #666666;
-            margin-bottom: 2rem;
-            letter-spacing: -0.02em;
-            animation: fadeInUp 0.45s ease 0.1s backwards;
-        }
-
-        .bio {
-            font-size: 1rem;
+            font-family: 'Libre Franklin', sans-serif;
+            font-size: 56px;
             font-weight: 300;
-            color: #333333;
-            line-height: 1.6;
-            margin-bottom: 2rem;
-            animation: fadeInUp 0.45s ease 0.2s backwards;
-        }
-
-        .interests-list {
-            font-size: 0.9rem;
-            color: #666666;
-            font-weight: 400;
-            animation: fadeInUp 0.45s ease 0.3s backwards;
-            text-align: left;
-        }
-
-        .contact {
-            margin-top: 2rem;
-            font-size: 0.9rem;
-            animation: fadeInUp 0.45s ease 0.4s backwards;
-            text-align: left;
-        }
-
-        .contact a {
-            color: #000000;
-            text-decoration: none;
-            margin-right: 2rem;
-            transition: opacity 0.2s ease;
-            border-bottom: 1px solid #000000;
-        }
-
-        .contact a:hover {
-            opacity: 0.5;
+            letter-spacing: -1px;
+            margin-bottom: 40px;
+            line-height: 1.1;
+            color: var(--text);
         }
 
         h2 {
-            font-size: 1.5rem;
+            font-family: 'Libre Franklin', sans-serif;
+            font-size: 24px;
+            font-weight: 500;
+            margin: 70px 0 25px 0;
+            letter-spacing: -0.3px;
+            color: var(--text);
+        }
+
+        h3 {
+            font-family: 'Libre Franklin', sans-serif;
+            font-size: 18px;
             font-weight: 600;
-            letter-spacing: 0.05em;
-            margin-bottom: 2rem;
-            text-transform: uppercase;
+            margin-bottom: 10px;
+            color: var(--accent);
         }
 
-        .timeline-item {
-            margin-bottom: 2.5rem;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.4s ease, transform 0.4s ease;
-            padding-left: 2rem;
+        p {
+            margin-bottom: 20px;
+            color: var(--text);
+        }
+
+        /* Bracket link style */
+        a {
+            color: var(--accent);
+            text-decoration: none;
             position: relative;
-        }
-
-        .timeline-item::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: -2.5rem;
-            width: 1px;
-            background: #e5e5e5;
-        }
-
-        .timeline-item:last-child::before {
-            bottom: 0;
-        }
-
-        .timeline-item::after {
-            content: '';
-            position: absolute;
-            left: -3px;
-            top: 0.4rem;
-            width: 7px;
-            height: 7px;
-            background: #000000;
-            border-radius: 50%;
-        }
-
-        .timeline-item.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .timeline-date {
-            font-size: 0.75rem;
-            color: #999999;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin-bottom: 0.5rem;
+            transition: all 0.2s ease;
             font-weight: 500;
         }
 
-        .timeline-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            letter-spacing: -0.02em;
-            margin-bottom: 0.25rem;
+        a::before {
+            content: '[';
+            margin-right: 2px;
+            color: var(--text);
         }
 
-        .timeline-subtitle {
-            font-size: 0.95rem;
-            color: #666666;
-            font-weight: 400;
-            margin-bottom: 0.75rem;
-        }
-
-        .timeline-description {
-            font-size: 0.95rem;
-            color: #333333;
-            line-height: 1.7;
-            font-weight: 400;
-        }
-
-        .education-content {
-            margin-bottom: 1.5rem;
-        }
-
-        .education-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 0.5rem;
-        }
-
-        .education-school {
-            font-size: 1.3rem;
-            font-weight: 600;
-            letter-spacing: -0.02em;
-        }
-
-        .education-location {
-            font-size: 0.95rem;
-            color: #666666;
-        }
-
-        .education-degree {
-            font-size: 1rem;
-            color: #333333;
-            margin-bottom: 1rem;
-        }
-
-        .coursework-section {
-            margin-top: 1rem;
-        }
-
-        .coursework-title {
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: #000000;
-        }
-
-        .coursework-list {
-            list-style: none;
-            padding-left: 0;
-        }
-
-        .coursework-list li {
-            font-size: 0.9rem;
-            color: #333333;
-            margin-bottom: 0.5rem;
-            line-height: 1.6;
-        }
-
-        .coursework-list li strong {
-            color: #000000;
-        }
-
-        .publication-item {
-            margin-bottom: 2rem;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.4s ease, transform 0.4s ease;
-        }
-
-        .publication-item.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .publication-year {
-            font-size: 0.9rem;
-            color: #999999;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            min-width: 60px;
+        a::after {
+            content: '→]';
+            margin-left: 2px;
+            color: var(--text);
             display: inline-block;
+            transition: transform 0.2s ease;
         }
 
-        .publication-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #000000;
-            line-height: 1.5;
+        a:hover {
+            background: rgba(230, 57, 70, 0.1);
+            padding: 2px 4px;
+            margin: -2px -4px;
         }
 
-        .publication-venue {
-            font-size: 1rem;
-            color: #666666;
-            font-style: italic;
+        a:hover::after {
+            transform: translateX(3px);
         }
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        /* Card with tabs on bottom */
+        .card {
+            margin: 40px 0;
+            border: 1px solid var(--border);
+            background: var(--paper);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-content {
+            padding: 30px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-tabs {
+            display: flex;
+            background: #FAFAFA;
+        }
+
+        .card-tab {
+            flex: 1;
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            color: var(--muted);
+            border-right: 1px solid var(--border);
+            position: relative;
+        }
+
+        .card-tab:last-child {
+            border-right: none;
+        }
+
+        .card-tab:hover {
+            background: rgba(230, 57, 70, 0.04);
+            color: var(--text);
+        }
+
+        .card-tab.active {
+            background: var(--paper);
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        .card-tab.active::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent);
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .card-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            color: var(--muted);
+            margin-bottom: 15px;
+        }
+
+        /* Portrait */
+        .portrait-grid {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .portrait-img {
+            width: 180px;
+            height: 180px;
+            object-fit: cover;
+            border: 1px solid var(--border);
+        }
+
+        /* Contact grid */
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .contact-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .contact-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--muted);
+            margin-bottom: 5px;
+        }
+
+        .contact-value {
+            font-size: 16px;
+            color: var(--text);
+        }
+
+        .contact-value a::before,
+        .contact-value a::after {
+            display: none;
+        }
+
+        .contact-value a {
+            color: var(--accent);
+            border-bottom: 1px solid transparent;
+            padding: 0;
+            margin: 0;
+        }
+
+        .contact-value a:hover {
+            border-bottom-color: var(--accent);
+            background: transparent;
+        }
+
+        /* Skills */
+        .skills-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .skill-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            background: var(--paper);
+            color: var(--text);
+        }
+
+        /* Accent line */
+        .accent-line {
+            width: 60px;
+            height: 3px;
+            background: var(--accent);
+            margin: 30px 0;
         }
 
         @media (max-width: 768px) {
             .container {
-                padding: 0 1.5rem;
+                padding: 60px 30px;
+            }
+
+            nav {
+                position: static;
+                margin-bottom: 40px;
+                text-align: center;
+            }
+
+            nav a {
+                margin: 0 15px;
+            }
+
+            nav a::before {
+                display: none;
             }
 
             h1 {
-                font-size: 2rem;
+                font-size: 38px;
             }
 
-            h2 {
-                font-size: 1.25rem;
-                margin-bottom: 1.5rem;
+            .portrait-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
             }
 
-            .subtitle {
-                font-size: 1rem;
-            }
-
-            .bio {
-                font-size: 0.9rem;
-            }
-
-            .bio-section {
-                flex-direction: column;
-                align-items: flex-start;
-                text-align: left;
-            }
-
-            .timeline-title {
-                font-size: 1.1rem;
-            }
-
-            section {
-                padding: 2rem 0;
-            }
-
-            .timeline-item {
-                margin-bottom: 2rem;
-                padding-left: 1.5rem;
-            }
-
-            .timeline-item::after {
-                width: 6px;
-                height: 6px;
-                left: -2.5px;
-            }
-
-            .hero {
-                padding: 5rem 0 2rem 0;
+            .contact-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
     <nav>
-        <button class="menu-toggle" id="menuToggle">☰</button>
-        <div class="nav-menu" id="navMenu">
-            <a href="#home">Home</a>
-            <a href="#education">Education</a>
-            <a href="#research">Research</a>
-            <a href="#experience">Experience</a>
-            <a href="#publications">Publications</a>
-        </div>
+        <a href="index.html">about</a>
+        <a href="experiences.html">experiences</a>
+        <a href="essays.html">essays</a>
     </nav>
 
-    <section class="hero" id="home">
-        <div class="container">
-            <div class="hero-content">
-                <h1>Mehul Nair</h1>
-                <p class="subtitle">Materials Science & Nuclear Engineering</p>
-                <div class="bio-section">
-                    <img src="mehulprofile.jpg" alt="Mehul Nair" class="profile-image">
-                    <p class="bio">I'm a student at UC Berkeley exploring the intersection of materials science, nuclear engineering, and semiconductors. My research spans superconductivity, ferroelectrics, nuclear materials, and advanced imaging techniques.</p>
-                </div>
-                <p class="interests-list">Materials Characterization & Synthesis · Battery & Energy Materials · Semiconductors · Thin Films</p>
-                <div class="contact">
-                    <a href="mailto:mehulnair@berkeley.edu">mehulnair@berkeley.edu</a>
-                    <a href="https://linkedin.com/in/mehnai" target="_blank">LinkedIn</a>
-                </div>
-            </div>
-        </div>
-    </section>
+    <div class="container">
+        <h1>Mehul Nair</h1>
 
-    <section id="education">
-        <div class="container">
-            <h2>Education</h2>
+        <h2>About</h2>
 
-            <div class="education-content">
-                <div class="education-header">
-                    <h3 class="education-school">University of California, Berkeley</h3>
-                    <span class="education-location">Berkeley, CA</span>
+        <div class="card">
+            <div class="card-content">
+                <div class="tab-panel active" data-card="about-card">
+                    <div class="portrait-grid">
+                        <img src="mehulprofile.jpg" alt="Mehul Nair" class="portrait-img">
+                        <div>
+                            <div class="contact-grid">
+                                <div class="contact-item">
+                                    <div class="contact-label">Email</div>
+                                    <div class="contact-value">mehulnair[at]berkeley.edu</div>
+                                    <div class="contact-value">mehulnair2005[at]gmail.com</div>
+                                </div>
+                                <div class="contact-item">
+                                    <div class="contact-label">LinkedIn</div>
+                                    <div class="contact-value"><a href="https://linkedin.com/in/mehnai">linkedin.com/in/mehnai</a></div>
+                                </div>
+                                <div class="contact-item">
+                                    <div class="contact-label">Location</div>
+                                    <div class="contact-value">Berkeley, California</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <p class="education-degree">B.S. Materials Science & Nuclear Engineering | 2022-2026</p>
-
-                <div class="coursework-section">
-                    <p class="coursework-title">Selected Coursework:</p>
-                    <ul class="coursework-list">
-                        <li><strong>Computational Materials Science:</strong> ML Tools for Energy Transport & Conversion, Advanced Modeling and Simulation of Manufacturing Processes</li>
-                        <li><strong>Lab:</strong> Materials Characterization, Micro-fabrication Technology, Radiation Detection</li>
-                        <li><strong>Theory:</strong> Electronic Materials, Phase Transformations & Kinetics, Thin-Film Materials Science, Mechanical Behavior, Bonding Crystallography & Defects, Nuclear Materials, Math for Physical Sciences, Additive Manufacturing Processes and Systems for Advanced Materials</li>
+                <div class="tab-panel" data-card="about-card">
+                    <h3>Now</h3>
+                    <p>Currently I'm on Winter Break</p>
+                    <ul style="margin-left: 20px; margin-bottom: 0;">
+                        <li style="margin-bottom: 10px;">Applying to Grad School! I want to pursue a PhD in Materials Science specifically focusing on electron microscopy.</li>
+                        <li>Working on a few side projects that I've picked up over the break!</li>
+                        <li>Waiting a few weeks so I can go to a bar for the first time</li>
                     </ul>
                 </div>
             </div>
-        </div>
-    </section>
-
-    <section id="research">
-        <div class="container">
-            <h2>Research</h2>
-            
-            <div class="timeline-item">
-                <p class="timeline-date">Jan 2025 – Present</p>
-                <h3 class="timeline-title">Center for Complex & Active Materials</h3>
-                <p class="timeline-subtitle">UCI · Prof. Xiaoqing Pan</p>
-                <p class="timeline-description">Assisting in an exploratory study on ptychography applications and improvements to current algorithms. Developing novel ptychographic methods for STEM images allowing for effective reconstruction of small samples.</p>
-            </div>
-
-            <div class="timeline-item">
-                <p class="timeline-date">Oct 2023 – Present</p>
-                <h3 class="timeline-title">Superconducting Magnet Program</h3>
-                <p class="timeline-subtitle">LBNL · Dr. Tengming Shen</p>
-                <p class="timeline-description">Developed a low-level quench detection system using LabVIEW FPGA and integrated it into the Superconducting Magnet testing facility. Currently working on magnet design and cable properties projects for BSSCO magnets. Created a novel metrology system that beat state-of-the-art sensitivity by a factor of 1000.</p>
-            </div>
-
-            <div class="timeline-item">
-                <p class="timeline-date">Sep 2022 – Present</p>
-                <h3 class="timeline-title">Nuclear Materials Group</h3>
-                <p class="timeline-subtitle">UC Berkeley · Prof. Peter Hosemann</p>
-                <p class="timeline-description">Conducting advanced failure analysis and characterization on additively manufactured steel for mechanical property analysis. Studying radiation effects in future fusion materials and evaluating irradiation impacts on mechanical properties of epoxies for superconducting magnets.</p>
-            </div>
-
-            <div class="timeline-item">
-                <p class="timeline-date">Jun 2024 – Aug 2024</p>
-                <h3 class="timeline-title">Center for Complex & Active Materials</h3>
-                <p class="timeline-subtitle">UCI · Prof. Xiaoqing Pan</p>
-                <p class="timeline-description">Applied image processing methods to refine electron microscope images to improve atomic-position determination and measure polarization in ferroelectric lattices. Improved atomic precision by 100% and polarization map uniformity by 40%, enabling oxygen fitting for the first time in certain ferroelectric interfaces.</p>
-            </div>
-
-            <div class="timeline-item">
-                <p class="timeline-date">Mar 2023 – Mar 2024</p>
-                <h3 class="timeline-title">Applied Nuclear Physics Program</h3>
-                <p class="timeline-subtitle">LBNL · Prof. Kai Vetter</p>
-                <p class="timeline-description">Tested novel reconstruction algorithms for low-noise near-field imaging of medical radioactive sources. Implemented reconstruction using Gaussian Process Prior to reconstruct medical phantoms imaged in 3D space using coded aperture.</p>
+            <div class="card-tabs">
+                <button class="card-tab active" onclick="switchTab('about-card', 0)">contact</button>
+                <button class="card-tab" onclick="switchTab('about-card', 1)">now</button>
             </div>
         </div>
-    </section>
+        <div class="card-label">fig 1: contact information and current status</div>
 
-    <section id="experience">
-        <div class="container">
-            <h2>Work Experience</h2>
-            
-            <div class="timeline-item">
-                <p class="timeline-date">Summer 2025</p>
-                <h3 class="timeline-title">Taiwan Semiconductor Manufacturing Corporation</h3>
-                <p class="timeline-subtitle">Epitaxy Process Engineering Intern</p>
-                <p class="timeline-description">Performed large-scale data analysis to resolve epitaxial growth quality issues. Conducted experiments using 50+ DOE conditions to optimize epitaxy processes for chip production. Implemented process modifications improving a key performance indicator by 35% and stability by 53%, earning finalist status in a 200-intern competition.</p>
-            </div>
+        <p>
+            Hey! I'm Mehul, currently a senior at UC Berkeley studying Materials Science and Nuclear Engineering. Throughout my four years at Berkeley, I've been part of a few research labs and have done research in Electron Microscopy, Nuclear Materials, Ferroelectrics, Materials for Extreme Environments, Applied Superconductivity and Radiation Detection. I've loved both theoretical and experimental aspects of my research and my aim is to bridge the two through computational methods for electron microscopy. Beyond the lab I love going to art museums, 3D modeling and I've been getting into crocheting!
+        </p>
+        <p>
+            As for this site (or as long as it stays in this iteration), I've mostly designed it so that I can share a bit more about myself and what I think is cool. Feel free to click around and if you have any specific questions feel free to contact me!
 
-            <div class="timeline-item">
-                <p class="timeline-date">Aug 2024 – Feb 2025</p>
-                <h3 class="timeline-title">Goodwater Capital</h3>
-                <p class="timeline-subtitle">Senior Student Consultant</p>
-                <p class="timeline-description">Conducted market analysis across nine regions utilizing 25+ databases and reports to identify growth opportunities. Gathered and processed data for 15 key metrics across various regions, condensing information into regional plans. Created detailed visualizations to recommend four strategic investment opportunities.</p>
-            </div>
+        <h2>Looking Forward</h2>
+        <p>
+            I'm currently waiting on responses from graduate school applications and I've been doing a bit of background reading on various topics I may be interested in pursuing in grad school (computational and experimental TEM methods).
+            If you're interested in discussing research, collaboration opportunities, or just want to chat about 
+            materials science, feel free to <a href="mailto:mehulnair@berkeley.edu">reach out</a>. 
+            You can also find my <a href="experiences.html">experiences</a> and some of my 
+            <a href="essays.html">writing</a> elsewhere on this site.
+        </p>
 
-            <div class="timeline-item">
-                <p class="timeline-date">Jan 2024 – May 2024</p>
-                <h3 class="timeline-title">Climeworks</h3>
-                <p class="timeline-subtitle">Student Consultant</p>
-                <p class="timeline-description">Analyzed market expansion possibilities for the Carbon Dioxide Removal market through stakeholder interviews and industry ESG commitment research. Managed Climeworks' top 100 Salesforce accounts, assessing CDR adoption through climate maturity. Investigated decision-making hierarchies and developed strategic sales frameworks.</p>
-            </div>
-
-            <div class="timeline-item">
-                <p class="timeline-date">Aug 2023 – Dec 2023</p>
-                <h3 class="timeline-title">Kiss The Ground</h3>
-                <p class="timeline-subtitle">Student Consultant</p>
-                <p class="timeline-description">Conducted in-depth product analysis to refine a B2B model for scaling penetration in the EdTech market. Developed go-to-market strategy by creating case studies on ESG and CSR-focused companies. Redesigned the website to enhance user engagement and retention.</p>
-            </div>
+        <div style="margin-top: 100px; padding-top: 30px; border-top: 1px solid var(--border); font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted);">
+            Last updated: December 2025
         </div>
-    </section>
-
-    <section id="publications">
-        <div class="container">
-            <h2>Publications & Presentations</h2>
-
-            <div class="publication-item">
-                <span class="publication-year">2023</span>
-                <span class="publication-title">Investigating Irradiated Superconducting Magnet Insulation Materials for Particle Accelerators.</span>
-                <span class="publication-venue">IEEE Transactions on Applied Superconductivity</span>
-            </div>
-
-            <div class="publication-item">
-                <span class="publication-year">2024</span>
-                <span class="publication-title">Smart Quench Management System Based on Fast Low-Level Voltage Measurements for HTS Magnets.</span>
-                <span class="publication-venue">ASC 2024.</span>
-            </div>
-
-            <div class="publication-item">
-                <span class="publication-year">2024</span>
-                <span class="publication-title">Morphology-Based Image Processing for Improved Atomic Position Determination in STEM Imaging.</span>
-                <span class="publication-venue">UCI SURF Symposium</span>
-            </div>
-
-            <div class="publication-item">
-                <span class="publication-year">2024</span>
-                <span class="publication-title">Effects of Composition on Radiation Damage Severity in Epoxy Mixes.</span>
-                <span class="publication-venue">MSE 104 Symposium</span>
-            </div>
-        </div>
-    </section>
+    </div>
 
     <script>
-        // Menu toggle
-        const menuToggle = document.getElementById('menuToggle');
-        const navMenu = document.getElementById('navMenu');
-
-        menuToggle.addEventListener('click', () => {
-            navMenu.classList.toggle('active');
-        });
-
-        // Close menu when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!menuToggle.contains(e.target) && !navMenu.contains(e.target)) {
-                navMenu.classList.remove('active');
-            }
-        });
-
-        // Close menu when clicking a link
-        document.querySelectorAll('.nav-menu a').forEach(link => {
-            link.addEventListener('click', () => {
-                navMenu.classList.remove('active');
+        function switchTab(cardId, index) {
+            const panels = document.querySelectorAll(`[data-card="${cardId}"]`);
+            const tabs = event.target.closest('.card-tabs').querySelectorAll('.card-tab');
+            
+            panels.forEach((panel, i) => {
+                panel.classList.toggle('active', i === index);
             });
-        });
-
-        // Intersection observer for animations
-        const observerOptions = {
-            threshold: 0.2,
-            rootMargin: '0px 0px -100px 0px'
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                }
+            
+            tabs.forEach((tab, i) => {
+                tab.classList.toggle('active', i === index);
             });
-        }, observerOptions);
-
-        document.querySelectorAll('section, .timeline-item, .publication-item').forEach(el => {
-            observer.observe(el);
-        });
-
-        // Smooth scrolling
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            });
-        });
+        }
     </script>
 </body>
 </html>
