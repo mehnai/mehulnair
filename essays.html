@@ -51,7 +51,7 @@
         }
 
         .container {
-            max-width: 900px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 80px 60px;
             position: relative;
@@ -155,6 +155,46 @@
             font-size: 12px;
             color: var(--muted);
             margin-left: 15px;
+            flex: 1;
+        }
+
+        .explorer-toolbar {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 5px;
+        }
+
+        .toolbar-btn {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            padding: 4px 10px;
+            border: 1px solid var(--border);
+            background: var(--paper);
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .toolbar-btn:hover {
+            background: rgba(230, 57, 70, 0.05);
+            border-color: var(--accent);
+        }
+
+        .toolbar-btn.active {
+            background: var(--accent);
+            color: var(--paper);
+            border-color: var(--accent);
+        }
+
+        .toolbar-separator {
+            width: 1px;
+            height: 16px;
+            background: var(--border);
         }
 
         .explorer-content {
@@ -163,6 +203,7 @@
             min-height: 400px;
         }
 
+        /* Grid View */
         .file-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -242,6 +283,82 @@
             margin-top: 5px;
         }
 
+        /* List View */
+        .file-list {
+            display: none;
+        }
+
+        .file-list.active {
+            display: block;
+        }
+
+        .file-grid.hidden {
+            display: none;
+        }
+
+        .list-item {
+            display: grid;
+            grid-template-columns: 40px 1fr auto auto;
+            gap: 15px;
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text);
+            align-items: center;
+        }
+
+        .list-item:hover {
+            background: rgba(230, 57, 70, 0.05);
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .list-icon {
+            width: 30px;
+            height: 35px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .list-icon::before {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 30px;
+            background: var(--paper);
+            border: 2px solid var(--border);
+            clip-path: polygon(0 0, 70% 0, 100% 30%, 100% 100%, 0 100%);
+        }
+
+        .list-icon .file-extension {
+            font-size: 9px;
+        }
+
+        .list-name {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        .list-date {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .list-size {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--muted);
+            text-align: right;
+        }
+
         /* Back link */
         .back-link {
             display: inline-block;
@@ -266,7 +383,7 @@
 
         @media (max-width: 768px) {
             .container {
-                padding: 60px 30px;
+                padding: 60px 24px;
             }
 
             nav {
@@ -277,6 +394,7 @@
 
             nav a {
                 margin: 0 15px;
+                padding: 8px 4px;
             }
 
             nav a::before {
@@ -287,9 +405,223 @@
                 font-size: 38px;
             }
 
+            .explorer-window {
+                margin: 30px 0;
+            }
+
+            .explorer-header {
+                flex-wrap: wrap;
+                padding: 10px 15px;
+            }
+
+            .explorer-path {
+                flex: 1 1 100%;
+                margin-left: 0;
+                margin-top: 10px;
+                order: 3;
+            }
+
+            .explorer-toolbar {
+                flex: 1;
+                justify-content: flex-end;
+                gap: 8px;
+            }
+
+            .toolbar-group {
+                gap: 3px;
+            }
+
+            .toolbar-btn {
+                font-size: 10px;
+                padding: 8px 12px;
+                min-height: 36px;
+            }
+
+            .toolbar-separator {
+                height: 12px;
+            }
+
+            .explorer-content {
+                padding: 20px 15px;
+                min-height: 300px;
+            }
+
             .file-grid {
-                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-                gap: 20px;
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 15px;
+            }
+
+            .file-item {
+                padding: 12px 10px;
+                min-height: 44px;
+            }
+
+            .file-icon {
+                width: 50px;
+                height: 60px;
+            }
+
+            .file-icon::before {
+                width: 40px;
+                height: 50px;
+            }
+
+            .file-icon::after {
+                width: 15px;
+                height: 15px;
+            }
+
+            .file-extension {
+                font-size: 10px;
+            }
+
+            .file-name {
+                font-size: 12px;
+            }
+
+            .file-meta {
+                font-size: 9px;
+            }
+
+            .list-item {
+                grid-template-columns: 35px 1fr auto;
+                gap: 10px;
+                padding: 12px 10px;
+                min-height: 44px;
+            }
+
+            .list-date {
+                display: none;
+            }
+
+            .list-name {
+                font-size: 13px;
+            }
+
+            .list-size {
+                font-size: 11px;
+            }
+
+            .back-link {
+                margin-top: 30px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 40px 16px;
+            }
+
+            nav {
+                margin-bottom: 30px;
+            }
+
+            nav a {
+                margin: 0 10px;
+                font-size: 13px;
+            }
+
+            h1 {
+                font-size: 32px;
+                margin-bottom: 30px;
+            }
+
+            .explorer-window {
+                margin: 20px 0;
+            }
+
+            .explorer-header {
+                padding: 8px 12px;
+            }
+
+            .control-dot {
+                width: 10px;
+                height: 10px;
+            }
+
+            .explorer-path {
+                font-size: 11px;
+            }
+
+            .toolbar-btn {
+                font-size: 9px;
+                padding: 6px 10px;
+                min-height: 32px;
+            }
+
+            .explorer-content {
+                padding: 15px 12px;
+                min-height: 250px;
+            }
+
+            .file-grid {
+                grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+                gap: 10px;
+            }
+
+            .file-item {
+                padding: 10px 8px;
+            }
+
+            .file-icon {
+                width: 40px;
+                height: 50px;
+                margin-bottom: 8px;
+            }
+
+            .file-icon::before {
+                width: 32px;
+                height: 40px;
+            }
+
+            .file-icon::after {
+                width: 12px;
+                height: 12px;
+            }
+
+            .file-extension {
+                font-size: 9px;
+            }
+
+            .file-name {
+                font-size: 11px;
+            }
+
+            .file-meta {
+                font-size: 8px;
+            }
+
+            .list-item {
+                grid-template-columns: 30px 1fr auto;
+                gap: 8px;
+                padding: 10px 8px;
+            }
+
+            .list-icon {
+                width: 25px;
+                height: 30px;
+            }
+
+            .list-icon::before {
+                width: 20px;
+                height: 25px;
+            }
+
+            .list-icon .file-extension {
+                font-size: 8px;
+            }
+
+            .list-name {
+                font-size: 12px;
+            }
+
+            .list-size {
+                font-size: 10px;
+            }
+
+            .back-link {
+                margin-top: 25px;
+                font-size: 11px;
             }
         }
     </style>
@@ -312,15 +644,51 @@
                     <div class="control-dot maximize"></div>
                 </div>
                 <div class="explorer-path">~/writings/</div>
+                <div class="explorer-toolbar">
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn active" onclick="setView('grid')">grid</button>
+                        <button class="toolbar-btn" onclick="setView('list')">list</button>
+                    </div>
+                    <div class="toolbar-separator"></div>
+                    <div class="toolbar-group">
+                        <button class="toolbar-btn active" onclick="setSortBy('alpha')">A-Z</button>
+                        <button class="toolbar-btn" onclick="setSortBy('date')">date</button>
+                    </div>
+                </div>
             </div>
             <div class="explorer-content">
-                <div class="file-grid">
-                    <a href="hello.html" class="file-item">
+                <div class="file-grid" id="fileGrid">
+                    <a href="hello.html" class="file-item" data-name="hello" data-date="2026-01-06" data-size="1">
                         <div class="file-icon">
                             <div class="file-extension">.txt</div>
                         </div>
                         <div class="file-name">hello</div>
                         <div class="file-meta">1 KB</div>
+                    </a>
+                    <a href="neutron-diffusion.html" class="file-item" data-name="neutron-diffusion" data-date="2026-01-08" data-size="45">
+                        <div class="file-icon">
+                            <div class="file-extension">.txt</div>
+                        </div>
+                        <div class="file-name">neutron-diffusion</div>
+                        <div class="file-meta">45 KB</div>
+                    </a>
+                </div>
+                <div class="file-list" id="fileList">
+                    <a href="hello.html" class="list-item" data-name="hello" data-date="2026-01-06" data-size="1">
+                        <div class="list-icon">
+                            <div class="file-extension">.txt</div>
+                        </div>
+                        <div class="list-name">hello</div>
+                        <div class="list-date">Jan 6, 2026</div>
+                        <div class="list-size">1 KB</div>
+                    </a>
+                    <a href="neutron-diffusion.html" class="list-item" data-name="neutron-diffusion" data-date="2026-01-08" data-size="45">
+                        <div class="list-icon">
+                            <div class="file-extension">.txt</div>
+                        </div>
+                        <div class="list-name">neutron-diffusion</div>
+                        <div class="list-date">Jan 8, 2026</div>
+                        <div class="list-size">45 KB</div>
                     </a>
                 </div>
             </div>
@@ -328,5 +696,71 @@
 
         <a href="index.html" class="back-link">← back to about</a>
     </div>
+
+    <script>
+        let currentView = 'grid';
+        let currentSort = 'alpha';
+
+        function setView(view) {
+            currentView = view;
+            const fileGrid = document.getElementById('fileGrid');
+            const fileList = document.getElementById('fileList');
+            const buttons = document.querySelectorAll('.toolbar-group button');
+            
+            // Update view
+            if (view === 'grid') {
+                fileGrid.classList.remove('hidden');
+                fileList.classList.remove('active');
+            } else {
+                fileGrid.classList.add('hidden');
+                fileList.classList.add('active');
+            }
+            
+            // Update button states
+            buttons.forEach(btn => {
+                if (btn.textContent === view) {
+                    btn.classList.add('active');
+                } else if (btn.textContent === 'grid' || btn.textContent === 'list') {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        function setSortBy(sortBy) {
+            currentSort = sortBy;
+            const buttons = document.querySelectorAll('.toolbar-group button');
+            
+            // Update button states
+            buttons.forEach(btn => {
+                if ((sortBy === 'alpha' && btn.textContent === 'A-Z') || 
+                    (sortBy === 'date' && btn.textContent === 'date')) {
+                    btn.classList.add('active');
+                } else if (btn.textContent === 'A-Z' || btn.textContent === 'date') {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            // Sort files
+            sortFiles(sortBy);
+        }
+
+        function sortFiles(sortBy) {
+            const fileGrid = document.getElementById('fileGrid');
+            const fileList = document.getElementById('fileList');
+            
+            // Get all items
+            const gridItems = Array.from(fileGrid.children);
+            const listItems = Array.from(fileList.children);
+            
+            // Sort function
+            const sortFn = sortBy === 'alpha' 
+                ? (a, b) => a.dataset.name.localeCompare(b.dataset.name)
+                : (a, b) => new Date(b.dataset.date) - new Date(a.dataset.date);
+            
+            // Sort and reappend
+            gridItems.sort(sortFn).forEach(item => fileGrid.appendChild(item));
+            listItems.sort(sortFn).forEach(item => fileList.appendChild(item));
+        }
+    </script>
 </body>
 </html>
