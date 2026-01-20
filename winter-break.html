@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Winter Break - Mehul Nair</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --black: #0a0a0a;
+            --white: #ffffff;
+            --gray-100: #f5f5f5;
+            --gray-200: #e5e5e5;
+            --gray-300: #d4d4d4;
+            --gray-400: #a3a3a3;
+            --gray-600: #525252;
+            --gray-800: #262626;
+            --grid-color: rgba(0, 0, 0, 0.08);
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--white);
+            color: var(--black);
+            line-height: 1.7;
+            font-size: 17px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Graph Paper Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 1;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 100px 40px;
+            position: relative;
+            z-index: 2;
+        }
+
+        nav {
+            position: fixed;
+            top: 40px;
+            right: 60px;
+            z-index: 100;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        nav a {
+            color: var(--black);
+            text-decoration: none;
+            margin-left: 25px;
+            position: relative;
+            transition: all 0.2s ease;
+            padding: 5px 10px;
+            border: 1px solid transparent;
+        }
+
+        nav a:hover {
+            border: 1px solid var(--black);
+            background: var(--black);
+            color: var(--white);
+        }
+
+        .essay-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 56px;
+            font-weight: 700;
+            letter-spacing: -2px;
+            margin-bottom: 12px;
+            line-height: 1.1;
+            color: var(--black);
+            text-transform: uppercase;
+        }
+
+        .essay-meta {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            color: var(--gray-600);
+            margin-bottom: 60px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Section Styling */
+        .section {
+            margin-bottom: 120px;
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .section-number {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 8px 16px;
+            border: 2px solid var(--black);
+            background: var(--white);
+            position: relative;
+        }
+
+        .section-number::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            right: -4px;
+            width: 100%;
+            height: 100%;
+            background: var(--black);
+            z-index: -1;
+        }
+
+        h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 38px;
+            font-weight: 700;
+            letter-spacing: -1px;
+            color: var(--black);
+            text-transform: uppercase;
+        }
+
+        p {
+            margin-bottom: 1.4em;
+            font-size: 17px;
+            line-height: 1.8;
+        }
+
+        /* Animation Canvas */
+        .animation-container {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            margin: 50px 0;
+            border: 2px solid var(--black);
+            background: var(--white);
+            overflow: hidden;
+        }
+
+        .animation-container::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            right: -6px;
+            width: 100%;
+            height: 100%;
+            border: 2px solid var(--black);
+            z-index: -1;
+        }
+
+        .animation-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Image Gallery */
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .image-item {
+            position: relative;
+            border: 2px solid var(--black);
+            background: var(--white);
+            padding: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .image-item::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            right: -6px;
+            width: 100%;
+            height: 100%;
+            border: 2px solid var(--black);
+            z-index: -1;
+            transition: all 0.3s ease;
+        }
+
+        .image-item:hover {
+            transform: translate(-3px, -3px);
+        }
+
+        .image-item:hover::after {
+            bottom: -8px;
+            right: -8px;
+        }
+
+        .image-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .image-caption {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            color: var(--gray-600);
+            margin-top: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Highlight Box */
+        .highlight-box {
+            border: 2px solid var(--black);
+            padding: 30px;
+            margin: 40px 0;
+            position: relative;
+            background: var(--gray-100);
+        }
+
+        .highlight-box::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            right: -6px;
+            width: 100%;
+            height: 100%;
+            border: 2px solid var(--black);
+            background: var(--black);
+            z-index: -1;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+        }
+
+        .stat-item {
+            border: 2px solid var(--black);
+            padding: 20px;
+            text-align: center;
+            background: var(--white);
+            position: relative;
+        }
+
+        .stat-item::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            right: -4px;
+            width: 100%;
+            height: 100%;
+            border: 2px solid var(--black);
+            z-index: -1;
+        }
+
+        .stat-number {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Flavor Text */
+        .flavor-text {
+            font-style: italic;
+            color: var(--gray-600);
+            font-size: 15px;
+            margin-bottom: 30px;
+            padding-left: 20px;
+            border-left: 3px solid var(--black);
+        }
+
+        /* Decorative Elements */
+        .doodle-corner {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            pointer-events: none;
+        }
+
+        .doodle-corner.top-left {
+            top: -30px;
+            left: -30px;
+        }
+
+        .doodle-corner.top-right {
+            top: -30px;
+            right: -30px;
+            transform: scaleX(-1);
+        }
+
+        .doodle-corner.bottom-right {
+            bottom: -30px;
+            right: -30px;
+            transform: scale(-1);
+        }
+
+        /* Back Link */
+        .back-link {
+            display: inline-block;
+            margin-top: 80px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--black);
+            text-decoration: none;
+            padding: 10px 20px;
+            border: 2px solid var(--black);
+            background: var(--white);
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .back-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            right: -4px;
+            width: 100%;
+            height: 100%;
+            background: var(--black);
+            z-index: -1;
+            transition: all 0.2s ease;
+        }
+
+        .back-link:hover {
+            transform: translate(-2px, -2px);
+        }
+
+        .back-link:hover::after {
+            bottom: -6px;
+            right: -6px;
+        }
+
+        /* Grand Canyon Photo */
+        .hero-image {
+            width: 100%;
+            height: 500px;
+            margin: 60px 0;
+            border: 3px solid var(--black);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-image::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            right: -8px;
+            width: 100%;
+            height: 100%;
+            border: 3px solid var(--black);
+            z-index: -1;
+        }
+
+        .hero-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(30%);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 80px 24px;
+            }
+
+            nav {
+                position: static;
+                margin-bottom: 40px;
+                text-align: center;
+            }
+
+            .essay-title {
+                font-size: 38px;
+            }
+
+            h2 {
+                font-size: 28px;
+            }
+
+            .animation-container {
+                height: 300px;
+            }
+
+            .hero-image {
+                height: 300px;
+            }
+        }
+
+        /* Animation specific styles */
+        .typewriter-line {
+            stroke: var(--black);
+            stroke-width: 2;
+            fill: none;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: draw 2s ease-out forwards;
+        }
+
+        @keyframes draw {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        .yarn-path {
+            stroke: #8B1538;
+            stroke-width: 8;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .shape-3d {
+            fill: none;
+            stroke: var(--black);
+            stroke-width: 2;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html">about</a>
+        <a href="experiences.html">experiences</a>
+        <a href="essays.html">essays</a>
+    </nav>
+
+    <div class="container">
+        <h1 class="essay-title">Winter Break</h1>
+        <div class="essay-meta">winter-break.txt • January 20 2026 </div>
+
+        <!-- Introduction Section -->
+        <div class="section intro-section" style="position: relative;">
+            <svg class="doodle-corner top-left" viewBox="0 0 60 60">
+                <path d="M 5 5 Q 15 25 5 45 M 15 5 Q 25 25 15 45 M 25 5 Q 35 25 25 45" stroke="black" stroke-width="2" fill="none"/>
+            </svg>
+            
+            <p style="font-size: 19px; font-weight: 500;">New Year's Resolutions came a bit earlier this year for me. Between PhD Apps, Research, Classes and other various activities, last semester was one of my busiest. Because of my workload, I didn't have as much time to dedicate to my random side quests which was something I heavily regretted coming into Winter Break. As such, I decided to use my winter break to try and resume some of these and learned some new things along the way.</p>
+            
+            <p style="font-size: 19px; font-weight: 500;">I've listed some of my highlights below!</p>
+        </div>
+
+        <!-- Writing Section -->
+        <div class="section writing-section" style="position: relative;">
+            <div class="section-header">
+                <div class="section-number">01</div>
+                <h2>Writing</h2>
+            </div>
+
+            <p class="flavor-text">Slightly confusing that I write my essay explaining why I'm writing after I've already written my first article but I wanted to ensure that I'd follow through first.</p>
+
+            <div class="animation-container">
+                <canvas class="animation-canvas" id="writingCanvas"></canvas>
+            </div>
+
+            <p>Although I generally enjoy writing, it's always been a fleeting hobby of mine due to the fact that I only write when I am free and have ideas. These moments have been seldom these days so my writing output has generally slowed down. Except for required writing such as my PhD apps or for my classes, I hadn't written something of substance since early 2025. This is unfortunate because I think that I am at my most coherent and cognizant when I'm in the habit of writing; I find it also gives me a good excuse to talk about some of my interests.</p>
+
+            <p>When I started Winter Break, I decided to consistently write about various topics I was interested in. In order to keep consistency, I've started a note where I write down topics that come to my mind so that I don't have to come up with something on the spot. This system actually works really well for me because I love revisiting old rabbit holes and the notes really give me another reason to do this.</p>
+
+            <p>I started with a review of NE 150, a class which I really enjoyed and wanted to refresh my knowledge on. That article, which is my first actual "essay" I've written on this site, is one of the more involved ones I've done considering how long it took me to read my notes, translate them into a readable format and mockup simulations. I don't plan on putting that much effort into every single one of my essays but I would like to create a series where I break down technical topics I'm interested in.</p>
+
+            <p>I've been making some drafts of essays to come and greatly enjoyed my return to the activity. I find myself more curious and willing to go deeper into subjects that pique my interests in the hopes that I may find myself with a good essay topic. However, in typical STEM major fashion, my writing is not close to perfect. In time, I hope to improve on this skill and present my thoughts in a more organized manner.</p>
+
+            <p>Frequent mehulnair.com visitors may also notice that I've completely overhauled my site. I realized that my previous site was not functionally different from a resume and I think it verged on too basic for my taste. This was partly inspired by wanting a clean place to put my writing so I could have a little self-hosted personal hub.</p>
+        </div>
+
+        <!-- Crochet Section -->
+        <div class="section crochet-section" style="position: relative;">
+            <svg class="doodle-corner top-right" viewBox="0 0 60 60">
+                <circle cx="10" cy="10" r="3" fill="black"/>
+                <circle cx="25" cy="10" r="3" fill="black"/>
+                <circle cx="40" cy="10" r="3" fill="black"/>
+                <circle cx="10" cy="25" r="3" fill="black"/>
+                <circle cx="25" cy="25" r="3" fill="black"/>
+                <circle cx="40" cy="25" r="3" fill="black"/>
+            </svg>
+            
+            <div class="section-header">
+                <div class="section-number">02</div>
+                <h2>Crochet</h2>
+            </div>
+
+            <p class="flavor-text">This one really confused a lot of people, I'm confused by how I managed to sink so much time into it myself</p>
+
+            <div class="animation-container">
+                <canvas class="animation-canvas" id="crochetCanvas"></canvas>
+            </div>
+
+            <p>Towards the end of last semester, I had a conversation with one of my Mechanical Engineering friends about how I lamented my inability to build physical things. I've always been very impressed by his intuition and his ability to navigate building things and I've wanted some sense of being able to create in the physical world. I spent the few weeks leading up to break trying to find something I could do and settled on crochet. This was a natural choice for several reasons.</p>
+
+            <p>For one, my mom already knew how to crochet and having skipped thanksgiving break to continue work in Berkeley, I wished to spend a bit more time with her. In addition, anyone who's spent some time with me knows that I have a love for textiles whether it be clothing or tapestries and crochet was a low barrier entry point to creating these for myself.</p>
+
+            <div class="image-gallery" style="grid-template-columns: repeat(2, 1fr); max-width: 800px; margin: 40px auto;">
+                <div class="image-item">
+                    <img src="winter-break/Grey-Scarf.png" alt="First crochet project">
+                    <div class="image-caption">First Attempt: Chunky Gray Scarf</div>
+                </div>
+                <div class="image-item">
+                    <img src="winter-break/RedScarf.png" alt="Second crochet project">
+                    <div class="image-caption">Project #2: Burgundy HDC Scarf (Mom's favorite)</div>
+                </div>
+            </div>
+
+            <p>Starting crochet was surprisingly cheap, I managed to get quite a few hooks and some yarn for around 20 dollars and I decided to start crocheting a chunky scarf. Starting was extremely hard, I had no idea how to keep the pattern consistent and I kept missing the last double crochet for the first few rows. My learning pains led to me restarting a total of six times from various lengths before I finally managed to get the hang of it.</p>
+
+            <p>For my second project, I decided to try something a bit harder but still accessible. Using some burgundy yarn I found at Michael's and booting up another beginner scarf youtube video, I decided to try my hand at a beautiful lengthwise HDC scarf. Crocheting lengthwise was annoying initially because of how meticulous I had to be; each layer involved 250 stitches and errors were pretty evident as they usually permeated throughout the layers. This project took me around 2 days of constant crocheting but after over 2500 stitches and equally as many hand cramps, I managed to get a somewhat decent looking final product. I'm personally a big fan of it and it fits well with my wardrobe but my mother seemed to have taken a liking to it so its her's now.</p>
+
+            <p>Crochet was a great new skill to learn and it really built upon my childhood love of Rainbow Loom in a way that let me create actually useful things. My newest project that I will start probably later this week is yet another scarf for one of my good friends!</p>
+        </div>
+
+        <!-- Blender Section -->
+        <div class="section blender-section" style="position: relative;">
+            <div class="section-header">
+                <div class="section-number">03</div>
+                <h2>Blender</h2>
+            </div>
+
+            <p class="flavor-text">I keep on telling myself I'll make another full project at some point but all the days seem to blend together and I never have enough time</p>
+
+            <div class="animation-container">
+                <canvas class="animation-canvas" id="blenderCanvas"></canvas>
+            </div>
+
+            <p>This break I didn't actually end up doing much Blender which is a shame because I came in with a lot of ideas on what I wanted to do. The two brief one day projects that I posted on my story earlier in the break were experimenting with new textures and animation so that I could apply them towards a bigger project. Creating animations and painting textures was a lot harder than I initially thought and I think that I'm going to spend a lot more time with this.</p>
+
+            <div class="image-gallery" style="grid-template-columns: repeat(2, 1fr); max-width: 700px; margin: 40px auto;">
+                <div class="image-item">
+                    <img src="winter-break/charactermodel.png" alt="3D Character Model">
+                    <div class="image-caption">Character Study: Exploring rigging & animation</div>
+                </div>
+                <div class="image-item">
+                    <img src="winter-break/teacup.png" alt="Teacup render">
+                    <div class="image-caption">Simple render: Teacup study</div>
+                </div>
+            </div>
+
+            <p>Thankfully, it wasn't a complete waste as I now have a whole project in mind as a synthesis of some of the other things I was working with earlier.</p>
+        </div>
+
+        <!-- National Parks Section -->
+        <div class="section parks-section" style="position: relative;">
+            <svg class="doodle-corner bottom-right" viewBox="0 0 60 60">
+                <path d="M 5 30 L 15 20 L 25 35 L 35 15 L 45 25 L 55 10" stroke="black" stroke-width="2" fill="none"/>
+            </svg>
+            
+            <div class="section-header">
+                <div class="section-number">04</div>
+                <h2>National Parks</h2>
+            </div>
+
+            <p class="flavor-text">Somehow, we managed to get this trip out of the group chat. I'm still surprised</p>
+
+            <div class="animation-container">
+                <canvas class="animation-canvas" id="parksCanvas"></canvas>
+            </div>
+
+            <div class="hero-image">
+                <img src="winter-break/IMG_5801.jpeg" alt="Grand Canyon">
+            </div>
+
+            <p>I'm writing this the day I came back from the trip (6 hours of driving ;-;) but I had an absolute blast exploring the AZ/UT national parks and I've learned that I need to do this type of thing way more often. We started at the Grand Canyon and hiked the S. Kaibab trail which was absolutely incredible, went to Zion which had the best sights by far and finished off at Bryce. Overall an amazing trip, probably something I should write more in depth about.</p>
+        </div>
+
+        <a href="essays.html" class="back-link">← BACK TO ESSAYS</a>
+    </div>
+
+    <script>
+        // Intersection Observer for scroll animations
+        const observerOptions = {
+            threshold: 0.2,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    
+                    // Trigger canvas animations
+                    if (entry.target.classList.contains('writing-section')) {
+                        animateWriting();
+                    } else if (entry.target.classList.contains('crochet-section')) {
+                        animateCrochet();
+                    } else if (entry.target.classList.contains('blender-section')) {
+                        animateBlender();
+                    } else if (entry.target.classList.contains('parks-section')) {
+                        animateParks();
+                    }
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.section').forEach(section => {
+            observer.observe(section);
+        });
+
+        // ============ WRITING ANIMATION ============
+        let writingAnimated = false;
+        function animateWriting() {
+            if (writingAnimated) return;
+            writingAnimated = true;
+
+            const canvas = document.getElementById('writingCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+
+            const dotSpacing = 4;
+            const dots = [];
+            let frame = 0;
+
+            // Create halftone dot grid
+            for (let y = dotSpacing; y < canvas.height; y += dotSpacing) {
+                for (let x = dotSpacing; x < canvas.width; x += dotSpacing) {
+                    dots.push({ x, y, baseSize: 0, currentSize: 0 });
+                }
+            }
+
+            // Text to type
+            const lines = [
+                "New Year's Resolutions came early",
+                "this year. Between PhD Apps,",
+                "Research, Classes and other",
+                "various activities, last semester",
+                "was one of my busiest..."
+            ];
+            
+            let currentLine = 0;
+            let currentChar = 0;
+            const lineHeight = 45;
+            const startY = 80;
+            const startX = 50;
+            const fontSize = 32;
+
+            function animate() {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Advance typing
+                if (frame % 3 === 0 && currentLine < lines.length) {
+                    if (currentChar < lines[currentLine].length) {
+                        currentChar++;
+                    } else if (currentLine < lines.length - 1) {
+                        currentLine++;
+                        currentChar = 0;
+                    }
+                }
+
+                // Render text invisibly to get pixel data
+                ctx.font = `${fontSize}px "Space Grotesk"`;
+                ctx.fillStyle = '#000000';
+                
+                // Draw current text state
+                for (let i = 0; i <= currentLine; i++) {
+                    const text = i === currentLine ? lines[i].substring(0, currentChar) : lines[i];
+                    ctx.fillText(text, startX, startY + i * lineHeight);
+                }
+
+                // Get pixel data
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                
+                // Clear canvas
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Calculate dot sizes based on text darkness
+                dots.forEach(dot => {
+                    const pixelIndex = (Math.floor(dot.y) * canvas.width + Math.floor(dot.x)) * 4;
+                    const darkness = 1 - (imageData.data[pixelIndex] / 255);
+                    
+                    // Larger dots = darker areas (text)
+                    dot.baseSize = darkness * 3.5;
+                    
+                    // Smooth transition
+                    dot.currentSize += (dot.baseSize - dot.currentSize) * 0.15;
+                });
+
+                // Draw halftone dots
+                ctx.fillStyle = '#0a0a0a';
+                dots.forEach(dot => {
+                    if (dot.currentSize > 0.3) {
+                        ctx.beginPath();
+                        ctx.arc(dot.x, dot.y, dot.currentSize, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+
+                // Draw blinking cursor
+                if (currentLine < lines.length) {
+                    ctx.font = `${fontSize}px "Space Grotesk"`;
+                    const textWidth = ctx.measureText(lines[currentLine].substring(0, currentChar)).width;
+                    if (Math.floor(frame / 20) % 2 === 0) {
+                        ctx.fillStyle = '#0a0a0a';
+                        ctx.fillRect(startX + textWidth + 2, startY + currentLine * lineHeight - fontSize + 8, 3, fontSize - 4);
+                    }
+                }
+
+                frame++;
+                if (frame < 450) {
+                    requestAnimationFrame(animate);
+                }
+            }
+            animate();
+        }
+
+        // ============ CROCHET ANIMATION ============
+        let crochetAnimated = false;
+        function animateCrochet() {
+            if (crochetAnimated) return;
+            crochetAnimated = true;
+
+            const canvas = document.getElementById('crochetCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+
+            const dotSpacing = 5;
+            const dots = [];
+            let frame = 0;
+
+            // Create halftone dot grid
+            for (let y = dotSpacing; y < canvas.height; y += dotSpacing) {
+                for (let x = dotSpacing; x < canvas.width; x += dotSpacing) {
+                    dots.push({ x, y, baseSize: 0, currentSize: 0 });
+                }
+            }
+
+            // Crochet chain parameters
+            const chainY = canvas.height / 2;
+            const stitchWidth = 40;
+            const stitchHeight = 30;
+            let numStitches = 0;
+            const maxStitches = Math.floor(canvas.width / stitchWidth) - 1;
+            const startX = 60;
+
+            function drawChainStitch(x, y, width, height) {
+                // Draw a chain stitch shape (oval/loop)
+                ctx.beginPath();
+                ctx.ellipse(x, y, width/2, height/2, 0, 0, Math.PI * 2);
+                ctx.lineWidth = 8;
+                ctx.strokeStyle = '#000000';
+                ctx.stroke();
+                
+                // Draw the connection point
+                ctx.beginPath();
+                ctx.arc(x + width/2, y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            function animate() {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Add new stitch every 25 frames
+                if (frame % 25 === 0 && numStitches < maxStitches) {
+                    numStitches++;
+                }
+
+                // Draw the chain
+                ctx.fillStyle = '#000000';
+                ctx.strokeStyle = '#000000';
+                
+                for (let i = 0; i < numStitches; i++) {
+                    const x = startX + i * stitchWidth;
+                    drawChainStitch(x, chainY, stitchWidth, stitchHeight);
+                }
+
+                // Draw hook/needle at the end if still creating
+                if (numStitches < maxStitches) {
+                    const hookX = startX + numStitches * stitchWidth + stitchWidth/2;
+                    const hookY = chainY - stitchHeight;
+                    
+                    // Hook
+                    ctx.beginPath();
+                    ctx.moveTo(hookX, hookY);
+                    ctx.lineTo(hookX, hookY - 40);
+                    ctx.arc(hookX + 8, hookY - 40, 8, Math.PI, 0);
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                }
+
+                // Get pixel data
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                
+                // Clear canvas
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Calculate dot sizes based on chain darkness
+                dots.forEach(dot => {
+                    const pixelIndex = (Math.floor(dot.y) * canvas.width + Math.floor(dot.x)) * 4;
+                    const darkness = 1 - (imageData.data[pixelIndex] / 255);
+                    
+                    // Larger dots = darker areas (yarn)
+                    dot.baseSize = darkness * 4;
+                    
+                    // Smooth transition
+                    dot.currentSize += (dot.baseSize - dot.currentSize) * 0.2;
+                });
+
+                // Draw halftone dots
+                ctx.fillStyle = '#0a0a0a';
+                dots.forEach(dot => {
+                    if (dot.currentSize > 0.3) {
+                        ctx.beginPath();
+                        ctx.arc(dot.x, dot.y, dot.currentSize, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+
+                frame++;
+                if (frame < 400) {
+                    requestAnimationFrame(animate);
+                }
+            }
+            animate();
+        }
+
+        // ============ BLENDER ANIMATION ============
+        let blenderAnimated = false;
+        function animateBlender() {
+            if (blenderAnimated) return;
+            blenderAnimated = true;
+
+            const canvas = document.getElementById('blenderCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+
+            const dotSpacing = 6;
+            const dots = [];
+            let frame = 0;
+
+            // Create halftone dot grid
+            for (let y = dotSpacing; y < canvas.height; y += dotSpacing) {
+                for (let x = dotSpacing; x < canvas.width; x += dotSpacing) {
+                    dots.push({ x, y, baseSize: 0, currentSize: 0 });
+                }
+            }
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            let rotation = 0;
+
+            function animate() {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                rotation += 0.01;
+
+                // Calculate dot sizes to create rotating 3D sphere
+                dots.forEach(dot => {
+                    const dx = dot.x - centerX;
+                    const dy = dot.y - centerY;
+                    
+                    // Rotate coordinates
+                    const rotX = dx * Math.cos(rotation) - dy * Math.sin(rotation);
+                    const rotY = dx * Math.sin(rotation) + dy * Math.cos(rotation);
+                    
+                    // Create sphere
+                    const sphereRadius = 120;
+                    const dist = Math.sqrt(rotX * rotX + rotY * rotY);
+                    
+                    if (dist < sphereRadius) {
+                        // Calculate depth (z coordinate)
+                        const z = Math.sqrt(Math.max(0, sphereRadius * sphereRadius - dist * dist));
+                        
+                        // Lighting from top-left
+                        const lightX = -100;
+                        const lightY = -100;
+                        const lightZ = 200;
+                        
+                        const normalX = rotX / sphereRadius;
+                        const normalY = rotY / sphereRadius;
+                        const normalZ = z / sphereRadius;
+                        
+                        const lightDirX = lightX - rotX;
+                        const lightDirY = lightY - rotY;
+                        const lightDirZ = lightZ - z;
+                        const lightLen = Math.sqrt(lightDirX*lightDirX + lightDirY*lightDirY + lightDirZ*lightDirZ);
+                        
+                        const dotProduct = (normalX * lightDirX + normalY * lightDirY + normalZ * lightDirZ) / lightLen;
+                        const brightness = Math.max(0, dotProduct);
+                        
+                        // Larger dots = darker areas, smaller = lighter
+                        dot.baseSize = (1 - brightness) * 4;
+                    } else {
+                        dot.baseSize = 0;
+                    }
+
+                    // Smooth transition
+                    dot.currentSize += (dot.baseSize - dot.currentSize) * 0.1;
+                });
+
+                // Draw halftone dots
+                ctx.fillStyle = '#0a0a0a';
+                dots.forEach(dot => {
+                    if (dot.currentSize > 0.3) {
+                        ctx.beginPath();
+                        ctx.arc(dot.x, dot.y, dot.currentSize, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+
+                // Draw wireframe outline
+                ctx.strokeStyle = '#0a0a0a';
+                ctx.lineWidth = 2;
+                ctx.globalAlpha = 0.3;
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(rotation);
+                
+                // Draw cube wireframe
+                const size = 100;
+                ctx.strokeRect(-size/2, -size/2, size, size);
+                ctx.strokeRect(-size/2 + 20, -size/2 - 20, size, size);
+                
+                // Connect corners
+                ctx.beginPath();
+                ctx.moveTo(-size/2, -size/2);
+                ctx.lineTo(-size/2 + 20, -size/2 - 20);
+                ctx.moveTo(size/2, -size/2);
+                ctx.lineTo(size/2 + 20, -size/2 - 20);
+                ctx.stroke();
+                
+                ctx.restore();
+                ctx.globalAlpha = 1;
+
+                frame++;
+                if (frame < 400) {
+                    requestAnimationFrame(animate);
+                }
+            }
+            animate();
+        }
+
+        // ============ NATIONAL PARKS ANIMATION ============
+        let parksAnimated = false;
+        function animateParks() {
+            if (parksAnimated) return;
+            parksAnimated = true;
+
+            const canvas = document.getElementById('parksCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+
+            const dotSpacing = 5;
+            const dots = [];
+            let frame = 0;
+
+            // Create halftone dot grid
+            for (let y = dotSpacing; y < canvas.height; y += dotSpacing) {
+                for (let x = dotSpacing; x < canvas.width; x += dotSpacing) {
+                    dots.push({ x, y, baseSize: 0, currentSize: 0 });
+                }
+            }
+
+            // Sun position
+            const sunX = canvas.width / 2;
+            let sunY = -100;
+            const targetSunY = 100;
+            const sunRadius = 70;
+
+            function animate() {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Animate sun rising
+                if (sunY < targetSunY) {
+                    sunY += 1.5;
+                }
+
+                // Calculate dot sizes based on landscape
+                dots.forEach(dot => {
+                    let intensity = 0;
+
+                    // Distance from sun (lighter area)
+                    const distToSun = Math.sqrt(
+                        Math.pow(dot.x - sunX, 2) + Math.pow(dot.y - sunY, 2)
+                    );
+
+                    // Sun is lighter (smaller dots)
+                    if (distToSun < sunRadius) {
+                        intensity = 0;
+                    } else {
+                        // Create canyon layers (waves getting darker towards bottom)
+                        const yProgress = dot.y / canvas.height;
+                        
+                        // Multiple wave layers
+                        const wave1 = Math.sin((dot.x * 0.015) + (dot.y * 0.01)) * 30;
+                        const wave2 = Math.sin((dot.x * 0.008) - (dot.y * 0.008)) * 40;
+                        const wave3 = Math.sin((dot.x * 0.012) + frame * 0.02) * 20;
+                        
+                        const waveHeight = wave1 + wave2 + wave3;
+                        const baseHeight = (canvas.height * 0.4) + waveHeight;
+                        
+                        // Create stratified layers
+                        if (dot.y > baseHeight) {
+                            // Layer depth - darker as we go down
+                            const depth = (dot.y - baseHeight) / (canvas.height - baseHeight);
+                            
+                            // Create distinct layers
+                            const layer = Math.floor(depth * 6);
+                            const layerPattern = Math.sin(dot.y * 0.1 + layer * 3) * 0.3 + 0.7;
+                            
+                            intensity = depth * layerPattern;
+                        } else {
+                            // Sky gradient
+                            const skyGradient = yProgress * 0.3;
+                            intensity = skyGradient;
+                        }
+                    }
+
+                    // Map intensity to dot size (0 = no dot, 1 = large dot)
+                    dot.baseSize = Math.min(intensity * 4, 4);
+
+                    // Smooth transition
+                    dot.currentSize += (dot.baseSize - dot.currentSize) * 0.12;
+                });
+
+                // Draw halftone dots
+                ctx.fillStyle = '#0a0a0a';
+                dots.forEach(dot => {
+                    if (dot.currentSize > 0.2) {
+                        ctx.beginPath();
+                        ctx.arc(dot.x, dot.y, dot.currentSize, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+
+                // Draw sun outline
+                ctx.strokeStyle = '#0a0a0a';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(sunX, sunY, sunRadius, 0, Math.PI * 2);
+                ctx.stroke();
+
+                frame++;
+                if (frame < 400) {
+                    requestAnimationFrame(animate);
+                }
+            }
+            animate();
+        }
+
+        // Handle window resize for all canvases
+        window.addEventListener('resize', () => {
+            writingAnimated = false;
+            crochetAnimated = false;
+            blenderAnimated = false;
+            parksAnimated = false;
+        });
+    </script>
+</body>
+</html>
