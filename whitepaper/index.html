@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <title>Minimal Editor</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" type="image/png" href="icon.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+  </head>
+  <body>
+    <main class="page" aria-label="Document editor">
+      <h1 id="title" class="title" contenteditable="true" spellcheck="true" aria-label="Document title"></h1>
+      <article id="editor" class="editor" contenteditable="true" spellcheck="true" aria-label="Document body"></article>
+      <section id="references-section" class="references" aria-label="References">
+        <h2
+          id="references-heading"
+          class="references-heading"
+          contenteditable="true"
+          spellcheck="true"
+          aria-label="References heading"
+        >
+          References
+        </h2>
+        <ol id="references-list" class="references-list"></ol>
+      </section>
+    </main>
+
+    <aside id="metadata-pane" class="metadata-pane" aria-hidden="true">
+      <div class="metadata-title">Metadata</div>
+      <label class="metadata-field" for="citation-format-select">Citation format</label>
+      <select id="citation-format-select" class="metadata-select">
+        <option value="MLA">MLA</option>
+        <option value="APA">APA</option>
+        <option value="Chicago">Chicago</option>
+        <option value="Custom">Custom</option>
+      </select>
+      <label class="metadata-field" for="page-size-select">Page size</label>
+      <select id="page-size-select" class="metadata-select">
+        <option value="endless">Endless</option>
+        <option value="A4">A4</option>
+        <option value="Letter">Letter</option>
+      </select>
+      <label class="metadata-field" for="page-orientation-select">Orientation</label>
+      <select id="page-orientation-select" class="metadata-select">
+        <option value="portrait">Portrait</option>
+        <option value="landscape">Landscape</option>
+      </select>
+      <label class="metadata-field">Margins (inches)</label>
+      <div class="metadata-margin-grid" aria-label="Page margins in inches">
+        <label class="metadata-margin-item" for="margin-top-input">
+          <span>Top</span>
+          <input id="margin-top-input" class="metadata-input" type="number" min="0" max="3" step="0.05" />
+        </label>
+        <label class="metadata-margin-item" for="margin-right-input">
+          <span>Right</span>
+          <input id="margin-right-input" class="metadata-input" type="number" min="0" max="3" step="0.05" />
+        </label>
+        <label class="metadata-margin-item" for="margin-bottom-input">
+          <span>Bottom</span>
+          <input id="margin-bottom-input" class="metadata-input" type="number" min="0" max="3" step="0.05" />
+        </label>
+        <label class="metadata-margin-item" for="margin-left-input">
+          <span>Left</span>
+          <input id="margin-left-input" class="metadata-input" type="number" min="0" max="3" step="0.05" />
+        </label>
+      </div>
+    </aside>
+
+    <div id="format-menu" class="format-menu" aria-hidden="true"></div>
+    <div id="inline-command-menu" class="inline-command-menu" aria-hidden="true"></div>
+    <div id="save-format-bar" class="save-format-bar" aria-hidden="true"></div>
+    <aside id="section-finder" class="section-finder" aria-hidden="true">
+      <div class="section-finder-title">Sections</div>
+      <div id="section-list" class="section-list"></div>
+    </aside>
+    <aside id="citation-sidebar" class="citation-sidebar" aria-hidden="true">
+      <div class="citation-sidebar-title">Citations</div>
+      <div id="citation-list" class="citation-list"></div>
+      <div class="citation-generator-title">Citation Generator</div>
+      <div class="citation-generator-grid" aria-label="Citation generator fields">
+        <label class="citation-generator-field" for="citation-author-input">
+          <span>Author</span>
+          <input id="citation-author-input" class="citation-generator-input" type="text" spellcheck="false" />
+        </label>
+        <label class="citation-generator-field" for="citation-title-input">
+          <span>Title</span>
+          <input id="citation-title-input" class="citation-generator-input" type="text" spellcheck="false" />
+        </label>
+        <label class="citation-generator-field" for="citation-source-input">
+          <span>Source / Publisher</span>
+          <input id="citation-source-input" class="citation-generator-input" type="text" spellcheck="false" />
+        </label>
+        <label class="citation-generator-field" for="citation-year-input">
+          <span>Year</span>
+          <input id="citation-year-input" class="citation-generator-input" type="text" spellcheck="false" />
+        </label>
+        <label class="citation-generator-field" for="citation-url-input">
+          <span>URL</span>
+          <input id="citation-url-input" class="citation-generator-input" type="text" spellcheck="false" />
+        </label>
+        <label class="citation-generator-field" for="citation-accessed-input">
+          <span>Accessed</span>
+          <input id="citation-accessed-input" class="citation-generator-input" type="text" spellcheck="false" />
+        </label>
+      </div>
+      <label class="citation-input-label" for="citation-input">Custom citation text</label>
+      <textarea
+        id="citation-input"
+        class="citation-input"
+        rows="2"
+        spellcheck="false"
+        placeholder="Used when metadata format is Custom"
+      ></textarea>
+      <div class="citation-preview-label">Preview</div>
+      <div id="citation-preview" class="citation-preview" aria-live="polite"></div>
+      <button id="citation-add-button" class="citation-add-button" type="button">Add Citation</button>
+    </aside>
+    <aside id="media-storage-sidebar" class="media-storage-sidebar" aria-hidden="true">
+      <div class="media-storage-title">Media Storage</div>
+      <div class="media-storage-subtitle">Cmd/Ctrl + \ to toggle</div>
+      <div id="media-storage-list" class="media-storage-list" aria-label="Media storage slots"></div>
+    </aside>
+    <aside id="table-sidebar" class="table-sidebar" aria-hidden="true">
+      <div class="table-sidebar-title">Table</div>
+      <div class="table-tab-row" role="tablist" aria-label="Table tools tabs">
+        <button
+          id="table-tab-structure"
+          class="table-tab is-selected"
+          type="button"
+          data-table-tab="structure"
+          role="tab"
+          aria-selected="true"
+          aria-controls="table-panel-structure"
+        >
+          Structure
+        </button>
+        <button
+          id="table-tab-analyze"
+          class="table-tab"
+          type="button"
+          data-table-tab="analyze"
+          role="tab"
+          aria-selected="false"
+          aria-controls="table-panel-analyze"
+        >
+          Analyze
+        </button>
+      </div>
+      <section id="table-panel-structure" class="table-tab-panel is-open" data-table-panel="structure" role="tabpanel">
+        <label class="table-field" for="table-caption-input">Caption</label>
+        <input id="table-caption-input" class="table-input" type="text" placeholder="Table caption" />
+        <div class="table-action-grid">
+          <button id="table-add-row-btn" class="table-action-btn" type="button">+ Row</button>
+          <button id="table-remove-row-btn" class="table-action-btn" type="button">- Row</button>
+          <button id="table-add-col-btn" class="table-action-btn" type="button">+ Column</button>
+          <button id="table-remove-col-btn" class="table-action-btn" type="button">- Column</button>
+        </div>
+      </section>
+      <section id="table-panel-analyze" class="table-tab-panel" data-table-panel="analyze" role="tabpanel">
+        <label class="table-field" for="table-analysis-precision">Decimal places</label>
+        <input id="table-analysis-precision" class="table-input" type="number" min="0" max="6" step="1" value="2" />
+        <label class="table-field" for="table-uncertainty-source">Uncertainty source</label>
+        <select id="table-uncertainty-source" class="table-select">
+          <option value="column">Column std dev</option>
+          <option value="row">Row std dev</option>
+        </select>
+        <div class="table-action-grid">
+          <button id="table-add-col-mean-btn" class="table-action-btn" type="button">Column Means</button>
+          <button id="table-add-row-mean-btn" class="table-action-btn" type="button">Row Means</button>
+          <button id="table-add-col-std-btn" class="table-action-btn" type="button">Column Std Dev</button>
+          <button id="table-add-row-std-btn" class="table-action-btn" type="button">Row Std Dev</button>
+          <button id="table-apply-uncertainty-btn" class="table-action-btn" type="button">Apply Uncertainty</button>
+          <button id="table-clear-uncertainty-btn" class="table-action-btn" type="button">Clear Uncertainty</button>
+        </div>
+      </section>
+    </aside>
+    <a id="back-link" href="../essays.html" class="back-link" style="display:none">← essays</a>
+    <div id="window-status" class="window-status" aria-live="polite">
+      <div id="word-count-status" class="window-status-line">Words: 0</div>
+      <div id="page-count-status" class="window-status-line">Page 1 of 1</div>
+    </div>
+    <script>if (new URLSearchParams(location.search).get("file")) document.getElementById("back-link").style.display = "";</script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script defer src="graph-engine.js"></script>
+    <script defer src="app.js"></script>
+  </body>
+</html>
