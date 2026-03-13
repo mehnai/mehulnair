@@ -342,6 +342,10 @@ body {
   clear: both;
 }
 
+.editor > [data-page-flow-split-continuation="true"] {
+  margin-top: 0;
+}
+
 .editor [style*="text-align: justify"] {
   text-align-last: left;
   text-justify: inter-word;

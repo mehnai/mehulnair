@@ -63,6 +63,7 @@ if (pageSurface) {
 
 const PAPER_FORMAT = "paper";
 const PAPER_VERSION = 1;
+const APP_ASSET_VERSION = "87";
 const PAPER_MIME = "application/x-paper+json";
 const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 const PDF_MIME = "application/pdf";
@@ -73,11 +74,15 @@ const MEDIA_STORAGE_GLOBAL_KEY = "minimal-editor-media-storage-v1";
 const DOUBLE_SHIFT_WINDOW_MS = 280;
 const TAB_HOLD_OPEN_MS = 340;
 const AUTO_SAVE_DELAY_MS = 1400;
+const DRAFT_PERSIST_DELAY_MS = 360;
 const SOFT_PAGE_GUIDE_DELAY_MS = 90;
 const TYPING_PAGE_GUIDE_DELAY_MS = 180;
+const RELAXED_TYPING_PAGE_GUIDE_DELAY_MS = 420;
 const TABLE_TYPING_PAGE_GUIDE_DELAY_MS = 280;
 const WORD_COUNT_REFRESH_DELAY_MS = 180;
 const LATEX_RENDER_DELAY_MS = 120;
+const PAGE_FLOW_RELAXED_BOUNDARY_THRESHOLD_PX = 72;
+const PAGE_FLOW_SPLIT_MIN_OFFSET = 24;
 
 const DEFAULT_PDF_PAGE_WIDTH = 612;
 const DEFAULT_PDF_PAGE_HEIGHT = 792;
@@ -128,6 +133,7 @@ const INLINE_COMMANDS = [
   { id: "numbered", trigger: "\\numbered", label: "Numbered List" },
   { id: "table", trigger: "\\table", label: "Table" },
   { id: "pagebreak", trigger: "\\pagebreak", label: "Page Break" },
+  { id: "math", trigger: "\\math", label: "Math" },
   { id: "graph", trigger: "\\graph", label: "Graph Block" },
   { id: "image", trigger: "\\image", label: "Image Block" }
 ];
@@ -169,6 +175,7 @@ let menuIndex = 0;
 let menuAnchorRange = null;
 let lastShiftTapAt = 0;
 let saveTimer = null;
+let draftPersistIdleHandle = 0;
 let autoSaveTimer = null;
 let autoSaveInFlight = false;
 let editRevision = 0;
@@ -234,6 +241,7 @@ let openPageCornerMenu = null;
 let draggedMediaBlock = null;
 let mediaDropPlacement = null;
 let mediaDropIndicator = null;
+let pageFlowSplitCounter = 0;
 
 const menuNodes = new Map();
 const saveFormatNodes = new Map();
@@ -1838,6 +1846,8 @@ const closePageCornerMenu = () => {
 const PAGE_FLOW_INLINE_SENTINEL = "__none__";
 const PAGE_FLOW_ATTR_SELECTOR =
   "[data-page-flow-inline-margin-top], [data-page-flow-base-margin-top], [data-page-flow-gap], [data-page-flow-managed]";
+const PAGE_FLOW_SPLIT_ATTR_SELECTOR =
+  "[data-page-flow-split-root], [data-page-flow-split-continuation], [data-page-flow-split-inline-margin-bottom]";
 
 const isFlowAdjustableBlock = (element) => {
   if (!(element instanceof HTMLElement)) return false;
@@ -1910,6 +1920,88 @@ const restoreOriginalMarginTopForFlowBlock = (element) => {
   }
 };
 
+const restoreOriginalMarginBottomForSplitBlock = (element) => {
+  if (!(element instanceof HTMLElement)) return;
+  const inline = element.dataset.pageFlowSplitInlineMarginBottom;
+  if (inline === PAGE_FLOW_INLINE_SENTINEL || typeof inline === "undefined") {
+    element.style.removeProperty("margin-bottom");
+  } else {
+    element.style.marginBottom = inline;
+  }
+};
+
+const clearTransientPageFlowAttrsFromElement = (element, restoreOriginalMargin = true) => {
+  if (!(element instanceof HTMLElement)) return;
+  if (restoreOriginalMargin) {
+    const inline = element.dataset.pageFlowInlineMarginTop;
+    if (inline === PAGE_FLOW_INLINE_SENTINEL) {
+      element.style.removeProperty("margin-top");
+    } else if (typeof inline === "string") {
+      element.style.marginTop = inline;
+    } else if (element.dataset.pageFlowManaged === "true") {
+      element.style.removeProperty("margin-top");
+    }
+  }
+  delete element.dataset.pageFlowInlineMarginTop;
+  delete element.dataset.pageFlowBaseMarginTop;
+  delete element.dataset.pageFlowGap;
+  delete element.dataset.pageFlowManaged;
+};
+
+const mergeTransientPageFlowSplits = (root, restoreOriginalMargin = true) => {
+  if (!(root instanceof Element)) return;
+
+  const splitRoots = [];
+  if (root instanceof HTMLElement && root.dataset.pageFlowSplitRoot && root.dataset.pageFlowSplitContinuation !== "true") {
+    splitRoots.push(root);
+  }
+  root
+    .querySelectorAll("[data-page-flow-split-root]:not([data-page-flow-split-continuation='true'])")
+    .forEach((node) => splitRoots.push(node));
+
+  splitRoots.forEach((rootBlock) => {
+    if (!(rootBlock instanceof HTMLElement)) return;
+    const splitRootId = String(rootBlock.dataset.pageFlowSplitRoot || "").trim();
+    if (!splitRootId) return;
+
+    let cursor = rootBlock.nextElementSibling;
+    while (
+      cursor instanceof HTMLElement &&
+      cursor.dataset.pageFlowSplitRoot === splitRootId &&
+      cursor.dataset.pageFlowSplitContinuation === "true"
+    ) {
+      const next = cursor.nextElementSibling;
+      while (cursor.firstChild) {
+        rootBlock.append(cursor.firstChild);
+      }
+      cursor.remove();
+      cursor = next;
+    }
+
+    if (restoreOriginalMargin) {
+      restoreOriginalMarginBottomForSplitBlock(rootBlock);
+    }
+    delete rootBlock.dataset.pageFlowSplitRoot;
+    delete rootBlock.dataset.pageFlowSplitInlineMarginBottom;
+    delete rootBlock.dataset.pageFlowSplitContinuation;
+  });
+
+  const orphanedContinuations = [];
+  if (root instanceof HTMLElement && root.dataset.pageFlowSplitContinuation === "true") {
+    orphanedContinuations.push(root);
+  }
+  root.querySelectorAll("[data-page-flow-split-continuation='true']").forEach((node) => orphanedContinuations.push(node));
+  orphanedContinuations.forEach((node) => {
+    if (!(node instanceof HTMLElement)) return;
+    if (restoreOriginalMargin) {
+      restoreOriginalMarginBottomForSplitBlock(node);
+    }
+    delete node.dataset.pageFlowSplitRoot;
+    delete node.dataset.pageFlowSplitInlineMarginBottom;
+    delete node.dataset.pageFlowSplitContinuation;
+  });
+};
+
 const stripTransientPageFlowState = (root, restoreOriginalMargin = true) => {
   if (!(root instanceof Element)) return;
   const targets = [];
@@ -1920,21 +2012,250 @@ const stripTransientPageFlowState = (root, restoreOriginalMargin = true) => {
 
   targets.forEach((element) => {
     if (!(element instanceof HTMLElement)) return;
-    if (restoreOriginalMargin) {
-      const inline = element.dataset.pageFlowInlineMarginTop;
-      if (inline === PAGE_FLOW_INLINE_SENTINEL) {
-        element.style.removeProperty("margin-top");
-      } else if (typeof inline === "string") {
-        element.style.marginTop = inline;
-      } else if (element.dataset.pageFlowManaged === "true") {
-        element.style.removeProperty("margin-top");
-      }
-    }
-    delete element.dataset.pageFlowInlineMarginTop;
-    delete element.dataset.pageFlowBaseMarginTop;
-    delete element.dataset.pageFlowGap;
-    delete element.dataset.pageFlowManaged;
+    clearTransientPageFlowAttrsFromElement(element, restoreOriginalMargin);
   });
+
+  mergeTransientPageFlowSplits(root, restoreOriginalMargin);
+};
+
+const getFixedPageFlowMetrics = (pageHeightPx) => {
+  if (!pageSurface || !editor || !Number.isFinite(pageHeightPx) || pageHeightPx <= 0) return null;
+
+  const computed = window.getComputedStyle(pageSurface);
+  const pageTopPadding = Math.max(0, parseFloat(computed.paddingTop) || 0);
+  const pageBottomPadding = Math.max(0, parseFloat(computed.paddingBottom) || 0);
+  const contentEndOffset = Math.max(pageTopPadding, pageHeightPx - pageBottomPadding);
+  const pageRect = pageSurface.getBoundingClientRect();
+  const editorRect = editor.getBoundingClientRect();
+  const editorOffsetRaw = editorRect.top - pageRect.top;
+  const editorOffsetFromPageTop = Number.isFinite(editorOffsetRaw) ? editorOffsetRaw : 0;
+  const contentHeight = Math.max(0, contentEndOffset - pageTopPadding);
+
+  return {
+    pageHeightPx,
+    pageTopPadding,
+    pageBottomPadding,
+    contentEndOffset,
+    editorOffsetFromPageTop,
+    contentHeight,
+    resolvePageIndexForTop(topInEditor) {
+      const normalized = (topInEditor + editorOffsetFromPageTop - pageTopPadding) / pageHeightPx;
+      if (!Number.isFinite(normalized)) return 0;
+      return Math.max(0, Math.floor(normalized));
+    },
+    pageContentStartForIndex(pageIndex) {
+      return pageIndex * pageHeightPx + pageTopPadding - editorOffsetFromPageTop;
+    },
+    pageContentEndForIndex(pageIndex) {
+      return pageIndex * pageHeightPx + contentEndOffset - editorOffsetFromPageTop;
+    }
+  };
+};
+
+const isSplittablePageFlowTextBlock = (block) => {
+  if (!(block instanceof HTMLElement)) return false;
+  if (block.parentElement !== editor) return false;
+  if (!block.matches("p, div, blockquote")) return false;
+  if (!isEditableTextBlock(block)) return false;
+  if (normalizeInlineText(block.textContent).length <= PAGE_FLOW_SPLIT_MIN_OFFSET * 2) return false;
+
+  const nestedBlocks = block.querySelector(
+    "p, div, blockquote, h2, h3, h4, h5, ul, ol, li, table, .graph-block, .image-block, .page-assist, .page-break-block"
+  );
+  return !nestedBlocks;
+};
+
+const collectTextNodeEntries = (block) => {
+  const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT);
+  const entries = [];
+  let start = 0;
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    const value = String(node.nodeValue || "");
+    if (!value) continue;
+    const end = start + value.length;
+    entries.push({ node, start, end, value });
+    start = end;
+  }
+  return { entries, totalLength: start, text: entries.map((entry) => entry.value).join("") };
+};
+
+const resolveTextNodePositionAtOffset = (entries, offset) => {
+  const target = Math.max(0, Number(offset) || 0);
+  for (const entry of entries) {
+    if (target < entry.end) {
+      return {
+        node: entry.node,
+        offset: Math.max(0, target - entry.start)
+      };
+    }
+  }
+
+  const last = entries[entries.length - 1];
+  if (!last) return null;
+  return {
+    node: last.node,
+    offset: last.value.length
+  };
+};
+
+const bottomOfRange = (range) => {
+  if (!(range instanceof Range)) return null;
+  const rects = range.getClientRects();
+  if (rects.length > 0) {
+    return rects[rects.length - 1].bottom;
+  }
+  const rect = range.getBoundingClientRect();
+  if (rect && Number.isFinite(rect.bottom)) return rect.bottom;
+  return null;
+};
+
+const findSplitOffsetForTextBlock = (block, maxBottom) => {
+  const { entries, totalLength, text } = collectTextNodeEntries(block);
+  if (entries.length === 0 || totalLength <= PAGE_FLOW_SPLIT_MIN_OFFSET * 2) return null;
+
+  const measurableRange = document.createRange();
+  measurableRange.selectNodeContents(block);
+  let low = PAGE_FLOW_SPLIT_MIN_OFFSET;
+  let high = totalLength - PAGE_FLOW_SPLIT_MIN_OFFSET;
+  let best = null;
+
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2);
+    const position = resolveTextNodePositionAtOffset(entries, mid);
+    if (!position || !position.node) {
+      high = mid - 1;
+      continue;
+    }
+
+    measurableRange.setEnd(position.node, position.offset);
+    const bottom = bottomOfRange(measurableRange);
+    if (bottom != null && bottom <= maxBottom) {
+      best = mid;
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
+  }
+
+  if (!Number.isFinite(best)) return null;
+  let candidate = Math.max(PAGE_FLOW_SPLIT_MIN_OFFSET, Math.min(totalLength - PAGE_FLOW_SPLIT_MIN_OFFSET, best));
+  while (candidate > PAGE_FLOW_SPLIT_MIN_OFFSET && !/\s/.test(text.charAt(candidate - 1))) {
+    candidate -= 1;
+  }
+  while (candidate < totalLength - PAGE_FLOW_SPLIT_MIN_OFFSET && /\s/.test(text.charAt(candidate))) {
+    candidate += 1;
+  }
+  if (candidate <= PAGE_FLOW_SPLIT_MIN_OFFSET || candidate >= totalLength - PAGE_FLOW_SPLIT_MIN_OFFSET) {
+    candidate = best;
+  }
+  if (candidate <= PAGE_FLOW_SPLIT_MIN_OFFSET || candidate >= totalLength - PAGE_FLOW_SPLIT_MIN_OFFSET) {
+    return null;
+  }
+  return candidate;
+};
+
+const splitOverflowingTextBlocksAcrossPages = (metrics) => {
+  if (!editor || !metrics || !Number.isFinite(metrics.contentHeight) || metrics.contentHeight <= 0) return false;
+
+  const blocks = Array.from(editor.children);
+  let changed = false;
+
+  for (let index = 0; index < blocks.length; index += 1) {
+    const block = blocks[index];
+    if (!(block instanceof HTMLElement) || !isSplittablePageFlowTextBlock(block)) continue;
+
+    const top = block.offsetTop;
+    const height = Math.max(0, block.offsetHeight || 0);
+    if (height <= metrics.contentHeight + 0.5) continue;
+
+    const pageIndex = metrics.resolvePageIndexForTop(top);
+    const pageContentEnd = metrics.pageContentEndForIndex(pageIndex);
+    const overflowsBottom = top + height > pageContentEnd + 0.5;
+    if (!overflowsBottom) continue;
+
+    const splitOffset = findSplitOffsetForTextBlock(block, pageContentEnd - 4);
+    if (!Number.isFinite(splitOffset)) continue;
+
+    const splitRootId = block.dataset.pageFlowSplitRoot || `page-flow-split-${++pageFlowSplitCounter}`;
+    const wasContinuation = block.dataset.pageFlowSplitContinuation === "true";
+    const originalInlineMarginBottom =
+      block.dataset.pageFlowSplitInlineMarginBottom || block.style.marginBottom || PAGE_FLOW_INLINE_SENTINEL;
+    block.dataset.pageFlowSplitRoot = splitRootId;
+    block.dataset.pageFlowSplitInlineMarginBottom = originalInlineMarginBottom;
+    if (!wasContinuation) {
+      delete block.dataset.pageFlowSplitContinuation;
+    }
+
+    const { entries } = collectTextNodeEntries(block);
+    const startPosition = resolveTextNodePositionAtOffset(entries, splitOffset);
+    if (!startPosition || !startPosition.node) continue;
+
+    const tailRange = document.createRange();
+    tailRange.selectNodeContents(block);
+    tailRange.setStart(startPosition.node, startPosition.offset);
+    const fragment = tailRange.extractContents();
+    if (!fragment || !fragment.hasChildNodes()) continue;
+
+    const nextBlock = block.cloneNode(false);
+    if (!(nextBlock instanceof HTMLElement)) {
+      block.append(fragment);
+      continue;
+    }
+
+    clearTransientPageFlowAttrsFromElement(nextBlock, true);
+    nextBlock.dataset.pageFlowSplitRoot = splitRootId;
+    nextBlock.dataset.pageFlowSplitContinuation = "true";
+    nextBlock.dataset.pageFlowSplitInlineMarginBottom = originalInlineMarginBottom;
+    nextBlock.style.marginTop = "0px";
+    restoreOriginalMarginBottomForSplitBlock(nextBlock);
+    nextBlock.append(fragment);
+
+    if (
+      normalizeInlineText(block.textContent).length <= PAGE_FLOW_SPLIT_MIN_OFFSET ||
+      normalizeInlineText(nextBlock.textContent).length <= PAGE_FLOW_SPLIT_MIN_OFFSET
+    ) {
+      while (nextBlock.firstChild) {
+        block.append(nextBlock.firstChild);
+      }
+      restoreOriginalMarginBottomForSplitBlock(block);
+      if (!wasContinuation) {
+        delete block.dataset.pageFlowSplitRoot;
+        delete block.dataset.pageFlowSplitInlineMarginBottom;
+      }
+      continue;
+    }
+
+    block.style.marginBottom = "0px";
+    editor.insertBefore(nextBlock, block.nextSibling);
+    blocks.splice(index + 1, 0, nextBlock);
+    changed = true;
+  }
+
+  return changed;
+};
+
+const shouldUseRelaxedTypingPageGuideDelay = (block, inputType) => {
+  if (!pageSurface || normalizePageSize(metadataSettings.pageSize) === "endless") return false;
+  if (!(block instanceof HTMLElement) || !isNaturalTextFlowBlock(block)) return false;
+  if (!inputType || (!inputType.startsWith("insert") && !inputType.startsWith("delete"))) return false;
+  if (block.dataset.pageFlowSplitRoot) return false;
+
+  const pageHeightPx = renderedScreenPageHeightPx();
+  const metrics = getFixedPageFlowMetrics(pageHeightPx);
+  if (!metrics || metrics.contentHeight <= 0) return false;
+
+  const top = block.offsetTop;
+  const height = Math.max(0, block.offsetHeight || 0);
+  const pageIndex = metrics.resolvePageIndexForTop(top);
+  const pageContentStart = metrics.pageContentStartForIndex(pageIndex);
+  const pageContentEnd = metrics.pageContentEndForIndex(pageIndex);
+  const topGap = top - pageContentStart;
+  const bottomGap = pageContentEnd - (top + height);
+  if (topGap <= PAGE_FLOW_RELAXED_BOUNDARY_THRESHOLD_PX) return false;
+  if (bottomGap <= PAGE_FLOW_RELAXED_BOUNDARY_THRESHOLD_PX) return false;
+  if (height >= metrics.contentHeight - PAGE_FLOW_RELAXED_BOUNDARY_THRESHOLD_PX) return false;
+  return true;
 };
 
 const cloneNormalizedEditorRoot = () => {
@@ -1954,26 +2275,13 @@ const getPersistableEditorHtml = () => {
 };
 
 const syncEditorPageFlowAdjustments = (pageHeightPx) => {
-  if (!pageSurface || !editor || !Number.isFinite(pageHeightPx) || pageHeightPx <= 0) {
+  const metrics = getFixedPageFlowMetrics(pageHeightPx);
+  if (!metrics) {
     stripTransientPageFlowState(editor, true);
     return false;
   }
 
-  const computed = window.getComputedStyle(pageSurface);
-  const pageTopPadding = Math.max(0, parseFloat(computed.paddingTop) || 0);
-  const pageBottomPadding = Math.max(0, parseFloat(computed.paddingBottom) || 0);
-  const contentEndOffset = Math.max(pageTopPadding, pageHeightPx - pageBottomPadding);
-  const pageRect = pageSurface.getBoundingClientRect();
-  const editorRect = editor.getBoundingClientRect();
-  const editorOffsetRaw = editorRect.top - pageRect.top;
-  const editorOffsetFromPageTop = Number.isFinite(editorOffsetRaw) ? editorOffsetRaw : 0;
-  const resolvePageIndexForTop = (topInEditor) => {
-    const normalized = (topInEditor + editorOffsetFromPageTop - pageTopPadding) / pageHeightPx;
-    if (!Number.isFinite(normalized)) return 0;
-    return Math.max(0, Math.floor(normalized));
-  };
-  const pageContentStartForIndex = (pageIndex) => pageIndex * pageHeightPx + pageTopPadding - editorOffsetFromPageTop;
-  const pageContentEndForIndex = (pageIndex) => pageIndex * pageHeightPx + contentEndOffset - editorOffsetFromPageTop;
+  const { resolvePageIndexForTop, pageContentStartForIndex, pageContentEndForIndex, contentHeight } = metrics;
   const blocks = Array.from(editor.children).filter((node) => isFlowAdjustableBlock(node));
   if (blocks.length === 0) {
     stripTransientPageFlowState(editor, true);
@@ -2070,7 +2378,6 @@ const syncEditorPageFlowAdjustments = (pageHeightPx) => {
     const pageIndex = resolvePageIndexForTop(currentTop);
     const pageContentStart = pageContentStartForIndex(pageIndex);
     const pageContentEnd = pageContentEndForIndex(pageIndex);
-    const contentHeight = Math.max(0, pageContentEnd - pageContentStart);
     const isTooTallForSinglePage = blockHeight > contentHeight + 0.5;
     const startsAtPageTop = currentTop <= pageContentStart + 0.5;
     const overflowsBottom = currentTop + blockHeight > pageContentEnd + 0.5;
@@ -3429,6 +3736,8 @@ const createPageCornerHotspot = (pageIndex, pageHeightPx) => {
 const renderAutoPageBreakGuides = () => {
   if (!pageSurface) return;
   const viewportAnchor = captureViewportAnchorState();
+  const caretMarker = createEditorCaretMarker();
+  mergeTransientPageFlowSplits(editor, true);
   normalizePageAssistBlocks();
   const focusedAssist =
     document.activeElement instanceof Element ? document.activeElement.closest(".page-assist") : null;
@@ -3455,6 +3764,9 @@ const renderAutoPageBreakGuides = () => {
     pageSurface.classList.remove("has-auto-page-breaks");
     pageSurface.classList.remove("is-header-editing", "is-footer-editing");
     scheduleWindowStatus(false);
+    if (caretMarker) {
+      restoreEditorCaretFromMarker(caretMarker);
+    }
     restoreViewportAnchorState(viewportAnchor);
     return;
   }
@@ -3474,6 +3786,9 @@ const renderAutoPageBreakGuides = () => {
     pageSurface.classList.remove("has-auto-page-breaks");
     pageSurface.classList.remove("is-header-editing", "is-footer-editing");
     scheduleWindowStatus(false);
+    if (caretMarker) {
+      restoreEditorCaretFromMarker(caretMarker);
+    }
     restoreViewportAnchorState(viewportAnchor);
     return;
   }
@@ -3491,14 +3806,15 @@ const renderAutoPageBreakGuides = () => {
   };
 
   let pageCount = computePageCount();
-  for (let pass = 0; pass < 6; pass += 1) {
+  for (let pass = 0; pass < 16; pass += 1) {
     const visibilityChanged = syncAllPageAssistVisibility();
     const assistChanged = syncRepeatedPageAssists(pageCount);
     const flowChanged = syncEditorPageFlowAdjustments(pageHeightPx);
+    const splitChanged = splitOverflowingTextBlocksAcrossPages(getFixedPageFlowMetrics(pageHeightPx));
     const assistPositionChanged = syncFixedPageAssistPlacement(pageHeightPx);
     syncReferencesOwnPageOffset(pageHeightPx);
     const recalculated = computePageCount();
-    if (!visibilityChanged && !assistChanged && !flowChanged && !assistPositionChanged && recalculated === pageCount) {
+    if (!visibilityChanged && !assistChanged && !flowChanged && !splitChanged && !assistPositionChanged && recalculated === pageCount) {
       break;
     }
     pageCount = recalculated;
@@ -3558,6 +3874,9 @@ const renderAutoPageBreakGuides = () => {
   pageCornerLayer.replaceChildren(cornerFragment);
   pageSurface.classList.toggle("has-auto-page-breaks", pageCount > 1);
   scheduleWindowStatus(false);
+  if (caretMarker) {
+    restoreEditorCaretFromMarker(caretMarker);
+  }
   restoreViewportAnchorState(viewportAnchor);
 };
 
@@ -3598,7 +3917,12 @@ const scheduleAutoPageBreakGuidesForTyping = (options = {}) => {
   if (!pageSurface) return;
   if (pageGuideSyncFrame) return;
   const withinTable = Boolean(options.withinTable);
-  const delay = withinTable ? TABLE_TYPING_PAGE_GUIDE_DELAY_MS : TYPING_PAGE_GUIDE_DELAY_MS;
+  const relaxed = Boolean(options.relaxed);
+  const delay = withinTable
+    ? TABLE_TYPING_PAGE_GUIDE_DELAY_MS
+    : relaxed
+      ? RELAXED_TYPING_PAGE_GUIDE_DELAY_MS
+      : TYPING_PAGE_GUIDE_DELAY_MS;
   if (typingPageGuideTimer) {
     clearTimeout(typingPageGuideTimer);
   }
@@ -8457,6 +8781,28 @@ const insertSectionAtCaret = (levelOrHeading = 2, headingText = "") => {
   }
 };
 
+const insertMathAtCaret = () => {
+  ensureSelectionInEditor();
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return false;
+
+  const range = selection.getRangeAt(0);
+  range.deleteContents();
+
+  const source = `${LATEX_OPEN_DELIMITER}${LATEX_CLOSE_DELIMITER}`;
+  const textNode = document.createTextNode(source);
+  range.insertNode(textNode);
+
+  const nextRange = document.createRange();
+  nextRange.setStart(textNode, LATEX_OPEN_DELIMITER.length);
+  nextRange.collapse(true);
+  selection.removeAllRanges();
+  selection.addRange(nextRange);
+
+  markDocumentChanged();
+  return true;
+};
+
 const executeInlineCommand = (commandId) => {
   if (commandId === "cite") {
     openCitationSidebar(true);
@@ -8492,6 +8838,10 @@ const executeInlineCommand = (commandId) => {
   }
   if (commandId === "pagebreak") {
     insertPageBreakAtCaret();
+    return;
+  }
+  if (commandId === "math") {
+    insertMathAtCaret();
     return;
   }
   if (commandId === "graph") {
@@ -8887,11 +9237,33 @@ const moveMenu = (step) => {
   updateMenuVisuals();
 };
 
+const clearScheduledDraftPersist = () => {
+  if (saveTimer) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
+  if (draftPersistIdleHandle && typeof window.cancelIdleCallback === "function") {
+    window.cancelIdleCallback(draftPersistIdleHandle);
+    draftPersistIdleHandle = 0;
+  }
+};
+
 const scheduleDraftPersist = () => {
-  clearTimeout(saveTimer);
+  clearScheduledDraftPersist();
   saveTimer = setTimeout(() => {
-    persistDraftNow();
-  }, 120);
+    saveTimer = null;
+    const runPersist = () => {
+      draftPersistIdleHandle = 0;
+      persistDraftNow();
+    };
+
+    if (typeof window.requestIdleCallback === "function") {
+      draftPersistIdleHandle = window.requestIdleCallback(runPersist, { timeout: 280 });
+      return;
+    }
+
+    runPersist();
+  }, DRAFT_PERSIST_DELAY_MS);
 };
 
 const clearAutoSaveTimer = () => {
@@ -9233,10 +9605,7 @@ const sanitizeLatexTokenElement = (source) => {
   const latexSource = sanitizePaperTextValue(source.dataset.latex || source.textContent).trim();
   if (!latexSource) return null;
   const token = document.createElement("span");
-  token.className = "latex-token";
-  token.setAttribute("contenteditable", "false");
-  token.dataset.latex = latexSource;
-  token.textContent = latexSource;
+  renderLatexNode(token, latexSource);
   return token;
 };
 
@@ -9464,6 +9833,7 @@ const sanitizePaperFragment = (html, mode = "body") => {
 const hydrateFromPayload = (payload, options = {}) => {
   const { fileName = DEFAULT_FILE_NAME, isDirty = false, keepHandle = false, keepNativePath = false } = options;
   activeDocumentToken += 1;
+  clearScheduledDraftPersist();
   clearAutoSaveTimer();
   clearMediaStoragePersistTimer();
   if (wordCountRefreshTimer) {
@@ -9592,6 +9962,7 @@ const syncFeatureUiFromState = () => {
   syncCitationPreview();
   renderMediaStorageSidebar();
   refreshCitationMarkersAndReferences();
+  rerenderLatexTokens();
   renderInlineLatex();
 };
 
@@ -11969,8 +12340,18 @@ const restoreDraft = () => {
 const registerServiceWorker = async () => {
   if (supportsDesktopBridge()) return;
   if (!("serviceWorker" in navigator)) return;
+  const hadController = Boolean(navigator.serviceWorker.controller);
+  let refreshedForUpdate = false;
   try {
-    await navigator.serviceWorker.register("./service-worker.js");
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      // Reload once when an updated worker takes over so stale cached bundles do not linger.
+      if (!hadController || refreshedForUpdate) return;
+      refreshedForUpdate = true;
+      window.location.reload();
+    });
+
+    const registration = await navigator.serviceWorker.register(`./service-worker.js?v=${APP_ASSET_VERSION}`);
+    void registration.update().catch(() => {});
   } catch {
     // Ignore registration failures; app still runs online.
   }
@@ -12763,6 +13144,7 @@ const handleEditorInput = (event) => {
   }
 
   const inputType = String((event && event.inputType) || "");
+  const activeTopLevelBlock = element ? editorTopLevelChildForNode(element) : null;
   markDocumentChanged({ deferPageGuides: true });
   consumeInlineCommandAtCaret(editor);
   consumeAutoListTrigger(editor);
@@ -12776,7 +13158,10 @@ const handleEditorInput = (event) => {
   if (isBulkInput) {
     scheduleAutoPageBreakGuidesSoft();
   } else {
-    scheduleAutoPageBreakGuidesForTyping({ withinTable: tableElement instanceof HTMLTableElement });
+    scheduleAutoPageBreakGuidesForTyping({
+      withinTable: tableElement instanceof HTMLTableElement,
+      relaxed: shouldUseRelaxedTypingPageGuideDelay(activeTopLevelBlock, inputType)
+    });
   }
   const mightChangeMediaStructure =
     inputType === "insertFromPaste" ||
