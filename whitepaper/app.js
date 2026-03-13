@@ -136,7 +136,10 @@ const CITATION_FORMATS = new Set(["MLA", "APA", "Chicago", "Custom"]);
 const PAGE_SIZES = new Set(["endless", "A4", "Letter"]);
 const PAGE_ORIENTATIONS = new Set(["portrait", "landscape"]);
 const PARAGRAPH_ALIGNMENTS = new Set(["left", "center", "right", "justify"]);
-const PAGE_ASSIST_KINDS = new Set(["note", "header", "footer"]);
+const PAGE_ASSIST_KINDS = new Set(["note", "header", "footer", "page-number"]);
+const PAGE_NUMBER_POSITIONS = new Set(["top", "bottom"]);
+const PAGE_ASSIST_VERTICAL_GAP_PX = 8;
+const PAGE_ASSIST_MIN_HEIGHT_PX = 14;
 
 const SCREEN_PAGE_DIMENSIONS_IN = Object.freeze({
   A4: { width: 8.27, height: 11.69 },
@@ -1840,7 +1843,7 @@ const isFlowAdjustableBlock = (element) => {
   if (!(element instanceof HTMLElement)) return false;
   if (element.classList.contains("page-assist")) {
     const kind = String(element.dataset.pageKind || "");
-    return kind !== "header" && kind !== "footer";
+    return kind !== "header" && kind !== "footer" && kind !== "page-number";
   }
   return true;
 };
@@ -2112,15 +2115,38 @@ const resolveAssistPlaceholder = (kind) => {
   return "Page note";
 };
 
+const normalizePageNumberPosition = (value, fallback = "bottom") => {
+  const raw = String(value || "").trim().toLowerCase();
+  if (PAGE_NUMBER_POSITIONS.has(raw)) return raw;
+  const normalizedFallback = String(fallback || "").trim().toLowerCase();
+  return PAGE_NUMBER_POSITIONS.has(normalizedFallback) ? normalizedFallback : "bottom";
+};
+
 const normalizePageAssistKind = (assist) => {
   if (!(assist instanceof HTMLElement)) return "note";
   const rawKind = String(assist.dataset.pageKind || "").trim().toLowerCase();
-  if (rawKind === "header" || rawKind === "footer" || rawKind === "note") return rawKind;
-  if (rawKind === "page-number") {
-    const rawPosition = String(assist.dataset.pageNumberPosition || "").trim().toLowerCase();
-    return rawPosition === "top" ? "header" : "footer";
-  }
+  if (rawKind === "header" || rawKind === "footer" || rawKind === "note" || rawKind === "page-number") return rawKind;
   return "note";
+};
+
+const resolvePageAssistBoundaryKind = (assist) => {
+  const kind = normalizePageAssistKind(assist);
+  if (kind === "page-number") {
+    const position = normalizePageNumberPosition(assist instanceof HTMLElement ? assist.dataset.pageNumberPosition : "");
+    return position === "top" ? "header" : "footer";
+  }
+  return kind;
+};
+
+const pageAssistSelector = (kind, pageNumber, options = {}) => {
+  const normalizedKind = PAGE_ASSIST_KINDS.has(kind) ? kind : "note";
+  const normalizedPageNumber = Math.max(1, Number(pageNumber) || 1);
+  let selector = `.page-assist[data-page-kind="${normalizedKind}"][data-page-index="${normalizedPageNumber}"]`;
+  if (normalizedKind === "page-number") {
+    const position = normalizePageNumberPosition(options.pageNumberPosition, "bottom");
+    selector += `[data-page-number-position="${position}"]`;
+  }
+  return selector;
 };
 
 const normalizePageAssistPageNumber = (assist) => {
@@ -2129,6 +2155,98 @@ const normalizePageAssistPageNumber = (assist) => {
   if (!Number.isFinite(raw)) return 1;
   if (raw <= 0) return 1;
   return Math.max(1, Math.floor(raw));
+};
+
+const splitLegacyPageNumberAssists = () => {
+  if (!editor) return false;
+  let changed = false;
+  const legacyAssists = Array.from(editor.querySelectorAll(".page-assist[data-page-number-auto='true']"));
+
+  legacyAssists.forEach((assist) => {
+    if (!(assist instanceof HTMLElement)) return;
+    const kind = normalizePageAssistKind(assist);
+    if (kind !== "header" && kind !== "footer") return;
+
+    const pageNumber = normalizePageAssistPageNumber(assist);
+    const position = kind === "header" ? "top" : "bottom";
+    const align = normalizeParagraphAlignment(assist.dataset.align || assist.style.textAlign || "right");
+    const format = normalizePageNumberFormat(
+      assist.dataset.pageNumberFormat || inferPageNumberFormatFromText(assist.textContent || "")
+    );
+    const selector = pageAssistSelector("page-number", pageNumber, { pageNumberPosition: position });
+    let pageNumberAssist = editor.querySelector(selector);
+    if (!(pageNumberAssist instanceof HTMLElement)) {
+      pageNumberAssist = document.createElement("div");
+      pageNumberAssist.className = "page-assist";
+      pageNumberAssist.dataset.pageAssist = "true";
+      pageNumberAssist.dataset.pageKind = "page-number";
+      pageNumberAssist.dataset.pageNumberPosition = position;
+      pageNumberAssist.dataset.pageIndex = String(pageNumber);
+      pageNumberAssist.dataset.placeholder = resolveAssistPlaceholder("page-number");
+      pageNumberAssist.setAttribute("aria-label", `${resolveAssistPlaceholder("page-number")} for page ${pageNumber}`);
+      if (position === "top") {
+        editor.insertBefore(pageNumberAssist, assist);
+      } else {
+        editor.insertBefore(pageNumberAssist, assist.nextSibling);
+      }
+      changed = true;
+    }
+
+    const expectedText = pageNumberAssistText(pageNumber, format);
+    if (String(pageNumberAssist.textContent || "").trim() !== expectedText) {
+      pageNumberAssist.textContent = expectedText;
+      changed = true;
+    }
+    if (pageNumberAssist.dataset.pageNumberAuto !== "true") {
+      pageNumberAssist.dataset.pageNumberAuto = "true";
+      changed = true;
+    }
+    if ("pageNumberManual" in pageNumberAssist.dataset) {
+      delete pageNumberAssist.dataset.pageNumberManual;
+      changed = true;
+    }
+    if (pageNumberAssist.dataset.pageNumberFormat !== format) {
+      pageNumberAssist.dataset.pageNumberFormat = format;
+      changed = true;
+    }
+    if (pageNumberAssist.dataset.pageNumberPosition !== position) {
+      pageNumberAssist.dataset.pageNumberPosition = position;
+      changed = true;
+    }
+    if (normalizeParagraphAlignment(pageNumberAssist.dataset.align || pageNumberAssist.style.textAlign || "right") !== align) {
+      pageNumberAssist.dataset.align = align;
+      pageNumberAssist.style.textAlign = align;
+      changed = true;
+    }
+    const nextRepeatAuto = assist.dataset.pageRepeatAuto === "true" ? "true" : "false";
+    if (pageNumberAssist.dataset.pageRepeatAuto !== nextRepeatAuto) {
+      pageNumberAssist.dataset.pageRepeatAuto = nextRepeatAuto;
+      changed = true;
+    }
+    if (assist.dataset.pageRepeatManual === "true") {
+      if (pageNumberAssist.dataset.pageRepeatManual !== "true") {
+        pageNumberAssist.dataset.pageRepeatManual = "true";
+        changed = true;
+      }
+    } else if ("pageRepeatManual" in pageNumberAssist.dataset) {
+      delete pageNumberAssist.dataset.pageRepeatManual;
+      changed = true;
+    }
+
+    if (stripPageNumberTokenFromAssist(assist, { format })) {
+      changed = true;
+    }
+    if ("pageNumberAuto" in assist.dataset) {
+      delete assist.dataset.pageNumberAuto;
+      changed = true;
+    }
+    if ("pageNumberFormat" in assist.dataset) {
+      delete assist.dataset.pageNumberFormat;
+      changed = true;
+    }
+  });
+
+  return changed;
 };
 
 const editorPageIndexForTopLevelBlock = (block, pageHeightPx, pageRect) => {
@@ -2294,6 +2412,9 @@ const handleBackspaceAcrossPages = () => {
 const normalizePageAssistBlocks = () => {
   if (!editor) return false;
   let changed = false;
+  if (splitLegacyPageNumberAssists()) {
+    changed = true;
+  }
   const assists = Array.from(editor.querySelectorAll(".page-assist"));
   const hasZeroBasedLegacyPageAssist = assists.some((assist) => {
     if (!(assist instanceof HTMLElement)) return false;
@@ -2321,9 +2442,30 @@ const normalizePageAssistBlocks = () => {
       changed = true;
     }
 
-    if (rawKind === "page-number" || String(assist.dataset.pageNumberAuto || "") === "true") {
+    if (normalizedKind === "page-number") {
+      const normalizedPosition = normalizePageNumberPosition(
+        assist.dataset.pageNumberPosition,
+        rawKind === "header" ? "top" : "bottom"
+      );
+      if (assist.dataset.pageNumberPosition !== normalizedPosition) {
+        assist.dataset.pageNumberPosition = normalizedPosition;
+        changed = true;
+      }
+    } else if ("pageNumberPosition" in assist.dataset) {
+      delete assist.dataset.pageNumberPosition;
+      changed = true;
+    }
+
+    const shouldAutoNumber =
+      String(assist.dataset.pageNumberAuto || "") === "true" ||
+      (rawKind === "page-number" && assist.dataset.pageNumberManual !== "true" && !("pageNumberAuto" in assist.dataset));
+    if (shouldAutoNumber) {
       if (assist.dataset.pageNumberAuto !== "true") {
         assist.dataset.pageNumberAuto = "true";
+        changed = true;
+      }
+      if ("pageNumberManual" in assist.dataset) {
+        delete assist.dataset.pageNumberManual;
         changed = true;
       }
       const detectedFormat = normalizePageNumberFormat(
@@ -2333,7 +2475,7 @@ const normalizePageAssistBlocks = () => {
         assist.dataset.pageNumberFormat = detectedFormat;
         changed = true;
       }
-      if (rawKind === "page-number" && pageNumber >= 2 && assist.dataset.pageRepeatManual !== "true") {
+      if (normalizedKind === "page-number" && pageNumber >= 2 && assist.dataset.pageRepeatManual !== "true") {
         if (assist.dataset.pageRepeatAuto !== "true") {
           assist.dataset.pageRepeatAuto = "true";
           changed = true;
@@ -2360,6 +2502,17 @@ const normalizePageAssistBlocks = () => {
     if (assist.getAttribute("aria-label") !== expectedLabel) {
       assist.setAttribute("aria-label", expectedLabel);
       changed = true;
+    }
+
+    if (normalizedKind === "page-number" && assist.dataset.pageNumberAuto === "true") {
+      const expectedText = pageNumberAssistText(
+        pageNumber,
+        normalizePageNumberFormat(assist.dataset.pageNumberFormat || inferPageNumberFormatFromText(assist.textContent || ""))
+      );
+      if (String(assist.textContent || "").replace(/\s+/g, " ").trim() !== expectedText) {
+        assist.textContent = expectedText;
+        changed = true;
+      }
     }
   });
   return changed;
@@ -2472,7 +2625,7 @@ const isPageAssistContentEmpty = (assist) => {
 const syncPageAssistVisibility = (assist) => {
   if (!(assist instanceof HTMLElement)) return false;
   const kind = String(assist.dataset.pageKind || "").toLowerCase();
-  const isHeaderOrFooter = kind === "header" || kind === "footer";
+  const isHeaderOrFooter = kind === "header" || kind === "footer" || kind === "page-number";
 
   if (!isHeaderOrFooter) {
     if (assist.dataset.pageContentEmpty === "true") {
@@ -2542,20 +2695,89 @@ const syncFixedPageAssistPlacement = (pageHeightPx) => {
   const footerOffset = Math.max(2, Math.round(Math.min(Math.max(2, pageBottomPadding - 2), pageBottomPadding * 0.42)));
   const autoPageNumberOffset = (padding) => {
     if (!Number.isFinite(padding) || padding <= 0) return 2;
-    const desired = Math.round(padding * 0.2);
-    const clamped = Math.max(2, Math.min(24, desired));
-    const paddingBound = Math.max(2, Math.round(padding - 2));
+    const desired = Math.round(padding * 0.1);
+    const clamped = Math.max(4, Math.min(12, desired));
+    const paddingBound = Math.max(2, Math.round(padding - 1));
     return Math.max(2, Math.min(paddingBound, clamped));
   };
   const autoPageNumberInset = (padding) => {
     if (!Number.isFinite(padding) || padding <= 1) return 0;
-    const desired = Math.round(padding * 0.22);
-    const clamped = Math.max(4, Math.min(24, desired));
+    const desired = Math.round(padding * 0.12);
+    const clamped = Math.max(2, Math.min(12, desired));
     const paddingBound = Math.max(0, Math.round(padding - 1));
     return Math.max(0, Math.min(paddingBound, clamped));
   };
   const positioned = new Set();
+  const pageSlots = new Map();
   let changed = false;
+
+  const registerPageAssist = (pageIndex) => {
+    if (!pageSlots.has(pageIndex)) {
+      pageSlots.set(pageIndex, {
+        header: null,
+        footer: null,
+        topPageNumber: null,
+        bottomPageNumber: null
+      });
+    }
+    return pageSlots.get(pageIndex);
+  };
+
+  const assistLayoutMetrics = (assist, kind) => {
+    const align = normalizeParagraphAlignment(assist.dataset.align || assist.style.textAlign || "right");
+    let leftInset = 0;
+    let rightInset = 0;
+    if (kind === "page-number") {
+      leftInset = autoPageNumberInset(pageLeftPadding);
+      rightInset = autoPageNumberInset(pageRightPadding);
+      if (align === "center") {
+        const symmetricInset = Math.min(leftInset, rightInset);
+        leftInset = symmetricInset;
+        rightInset = symmetricInset;
+      }
+    }
+    return {
+      assist,
+      kind,
+      align,
+      leftInset,
+      rightInset,
+      height: Math.max(PAGE_ASSIST_MIN_HEIGHT_PX, assist.offsetHeight || 0)
+    };
+  };
+
+  const applyPositionedAssist = (entry, desiredTopInPage) => {
+    if (!entry || !(entry.assist instanceof HTMLElement)) return;
+    const desiredTopInEditor = desiredTopInPage - editorOffsetFromPageTop;
+    const nextTop = `${Math.round(desiredTopInEditor)}px`;
+    const nextLeft = `${Math.round(-pageLeftPadding + entry.leftInset)}px`;
+    const nextRight = `${Math.round(-pageRightPadding + entry.rightInset)}px`;
+    if (
+      entry.assist.dataset.pageAssistPositioned !== "true" ||
+      entry.assist.style.position !== "absolute" ||
+      entry.assist.style.top !== nextTop ||
+      entry.assist.style.left !== nextLeft ||
+      entry.assist.style.right !== nextRight ||
+      entry.assist.style.width !== "auto" ||
+      entry.assist.style.margin !== "0px" ||
+      entry.assist.style.zIndex !== "6"
+    ) {
+      entry.assist.style.position = "absolute";
+      entry.assist.style.top = nextTop;
+      entry.assist.style.left = nextLeft;
+      entry.assist.style.right = nextRight;
+      entry.assist.style.width = "auto";
+      entry.assist.style.margin = "0";
+      entry.assist.style.zIndex = "6";
+      entry.assist.dataset.pageAssistPositioned = "true";
+      changed = true;
+    }
+    if (normalizeParagraphAlignment(entry.assist.style.textAlign || entry.assist.dataset.align || "right") !== entry.align) {
+      entry.assist.style.textAlign = entry.align;
+      changed = true;
+    }
+    positioned.add(entry.assist);
+  };
 
   const assists = Array.from(editor.querySelectorAll(".page-assist"));
   assists.forEach((assist) => {
@@ -2567,57 +2789,53 @@ const syncFixedPageAssistPlacement = (pageHeightPx) => {
       clearPositionedPageAssist(assist);
       return;
     }
-    const kind = String(assist.dataset.pageKind || "").toLowerCase();
-    if (kind !== "header" && kind !== "footer") return;
-    const isAutoPageNumber = assist.dataset.pageNumberAuto === "true";
-    const topOffset = isAutoPageNumber ? autoPageNumberOffset(pageTopPadding) : headerOffset;
-    const bottomOffset = isAutoPageNumber ? autoPageNumberOffset(pageBottomPadding) : footerOffset;
-    let leftInset = isAutoPageNumber ? autoPageNumberInset(pageLeftPadding) : 0;
-    let rightInset = isAutoPageNumber ? autoPageNumberInset(pageRightPadding) : 0;
+    const kind = normalizePageAssistKind(assist);
+    if (kind !== "header" && kind !== "footer" && kind !== "page-number") return;
     const pageIndex = Math.max(0, Number(assist.dataset.pageIndex || "1") - 1);
-    const align = normalizeParagraphAlignment(assist.dataset.align || assist.style.textAlign || "right");
-    if (align === "center") {
-      const symmetricInset = Math.min(leftInset, rightInset);
-      leftInset = symmetricInset;
-      rightInset = symmetricInset;
+    const slot = registerPageAssist(pageIndex);
+    const metrics = assistLayoutMetrics(assist, kind);
+    if (kind === "page-number") {
+      const position = normalizePageNumberPosition(assist.dataset.pageNumberPosition, "bottom");
+      if (position === "top") {
+        slot.topPageNumber = metrics;
+      } else {
+        slot.bottomPageNumber = metrics;
+      }
+      return;
     }
+    if (kind === "header") {
+      slot.header = metrics;
+      return;
+    }
+    slot.footer = metrics;
+  });
 
+  pageSlots.forEach((slot, pageIndex) => {
     const pageTop = pageIndex * pageHeightPx;
-    const assistHeight = Math.max(0, assist.offsetHeight || 0);
-    const desiredTopInPage =
-      kind === "header" ? pageTop + topOffset : pageTop + pageHeightPx - bottomOffset - Math.max(assistHeight, 14);
-    const desiredTopInEditor = desiredTopInPage - editorOffsetFromPageTop;
-    const nextTop = `${Math.round(desiredTopInEditor)}px`;
-    const nextLeft = `${Math.round(-pageLeftPadding + leftInset)}px`;
-    const nextRight = `${Math.round(-pageRightPadding + rightInset)}px`;
 
-    if (
-      assist.dataset.pageAssistPositioned !== "true" ||
-      assist.style.position !== "absolute" ||
-      assist.style.top !== nextTop ||
-      assist.style.left !== nextLeft ||
-      assist.style.right !== nextRight ||
-      assist.style.width !== "auto" ||
-      assist.style.margin !== "0px" ||
-      assist.style.zIndex !== "6"
-    ) {
-      assist.style.position = "absolute";
-      assist.style.top = nextTop;
-      assist.style.left = nextLeft;
-      assist.style.right = nextRight;
-      assist.style.width = "auto";
-      assist.style.margin = "0";
-      assist.style.zIndex = "6";
-      assist.dataset.pageAssistPositioned = "true";
-      changed = true;
+    let topCursor = pageTop;
+    if (slot.topPageNumber) {
+      const topNumberTop = pageTop + autoPageNumberOffset(pageTopPadding);
+      applyPositionedAssist(slot.topPageNumber, topNumberTop);
+      topCursor = topNumberTop + slot.topPageNumber.height + PAGE_ASSIST_VERTICAL_GAP_PX;
+    }
+    if (slot.header) {
+      const headerTop = Math.max(pageTop + headerOffset, topCursor);
+      applyPositionedAssist(slot.header, headerTop);
     }
 
-    if (normalizeParagraphAlignment(assist.style.textAlign || assist.dataset.align || "right") !== align) {
-      assist.style.textAlign = align;
-      changed = true;
+    let bottomCursor = pageTop + pageHeightPx;
+    if (slot.bottomPageNumber) {
+      const bottomNumberTop =
+        pageTop + pageHeightPx - autoPageNumberOffset(pageBottomPadding) - slot.bottomPageNumber.height;
+      applyPositionedAssist(slot.bottomPageNumber, bottomNumberTop);
+      bottomCursor = bottomNumberTop - PAGE_ASSIST_VERTICAL_GAP_PX;
     }
-
-    positioned.add(assist);
+    if (slot.footer) {
+      const footerBaseTop = pageTop + pageHeightPx - footerOffset - slot.footer.height;
+      const footerTop = Math.min(footerBaseTop, bottomCursor - slot.footer.height);
+      applyPositionedAssist(slot.footer, footerTop);
+    }
   });
 
   const stale = Array.from(editor.querySelectorAll(".page-assist[data-page-assist-positioned='true']"));
@@ -2687,7 +2905,7 @@ const locatePageFlowAnchors = (pageIndex, pageHeightPx) => {
   return { firstInPage, lastInPage, firstAfterPage };
 };
 
-const createPageAssistBlock = (kind, pageNumber) => {
+const createPageAssistBlock = (kind, pageNumber, options = {}) => {
   const block = document.createElement("div");
   block.className = "page-assist";
   block.dataset.pageAssist = "true";
@@ -2698,6 +2916,9 @@ const createPageAssistBlock = (kind, pageNumber) => {
   block.dataset.pageRepeatAuto = "false";
   block.style.textAlign = "right";
   block.setAttribute("aria-label", `${resolveAssistPlaceholder(kind)} for page ${pageNumber}`);
+  if (kind === "page-number") {
+    block.dataset.pageNumberPosition = normalizePageNumberPosition(options.pageNumberPosition, "bottom");
+  }
   return block;
 };
 
@@ -2713,13 +2934,15 @@ const insertPageAssistForPage = (kind, pageIndex, options = {}) => {
     initialText = "",
     markAsPageNumber = false,
     repeatAuto = false,
-    align = null
+    align = null,
+    pageNumberPosition = "bottom"
   } = options;
   const normalizedAlign = align ? normalizeParagraphAlignment(align) : null;
+  const normalizedPageNumberPosition = normalizePageNumberPosition(pageNumberPosition, "bottom");
 
   const pageNumber = Math.max(1, Math.floor(pageIndex) + 1);
   const pageKey = String(pageNumber);
-  const existing = editor.querySelector(`.page-assist[data-page-kind="${kind}"][data-page-index="${pageKey}"]`);
+  const existing = editor.querySelector(pageAssistSelector(kind, pageKey, { pageNumberPosition: normalizedPageNumberPosition }));
   if (existing instanceof HTMLElement) {
     let changed = false;
     if (initialText && !String(existing.textContent || "").trim()) {
@@ -2740,6 +2963,10 @@ const insertPageAssistForPage = (kind, pageIndex, options = {}) => {
       delete existing.dataset.pageRepeatManual;
       changed = true;
     }
+    if (kind === "page-number" && existing.dataset.pageNumberPosition !== normalizedPageNumberPosition) {
+      existing.dataset.pageNumberPosition = normalizedPageNumberPosition;
+      changed = true;
+    }
     if (focus && isPageAssistContentEmpty(existing)) {
       delete existing.dataset.pageContentEmpty;
     }
@@ -2758,7 +2985,7 @@ const insertPageAssistForPage = (kind, pageIndex, options = {}) => {
     return existing;
   }
 
-  const block = createPageAssistBlock(kind, pageNumber);
+  const block = createPageAssistBlock(kind, pageNumber, { pageNumberPosition: normalizedPageNumberPosition });
   if (initialText) {
     block.textContent = initialText;
   }
@@ -2774,8 +3001,9 @@ const insertPageAssistForPage = (kind, pageIndex, options = {}) => {
     delete block.dataset.pageRepeatManual;
   }
   const { firstInPage, lastInPage, firstAfterPage } = locatePageFlowAnchors(pageIndex, pageHeightPx);
+  const insertAtTop = kind === "header" || (kind === "page-number" && normalizedPageNumberPosition === "top");
 
-  if (kind === "header") {
+  if (insertAtTop) {
     if (firstInPage) {
       editor.insertBefore(block, firstInPage);
     } else if (firstAfterPage) {
@@ -2812,54 +3040,43 @@ const insertPageNumberAssistForPage = (pageIndex, options = {}) => {
   const position = options.position === "bottom" ? "bottom" : "top";
   const align = normalizeParagraphAlignment(options.align || "right");
   const format = normalizePageNumberFormat(options.format || "page");
-  const targetKind = position === "bottom" ? "footer" : "header";
   const pageNumber = Math.max(1, Math.floor(pageIndex) + 1);
   const pageNumberText = pageNumberAssistText(pageNumber, format);
-  const header = insertPageAssistForPage(targetKind, pageIndex, {
+  const assist = insertPageAssistForPage("page-number", pageIndex, {
     focus: true,
     markDirty: false,
     initialText: pageNumberText,
     markAsPageNumber: true,
-    align
+    align,
+    pageNumberPosition: position
   });
-  if (!(header instanceof HTMLElement)) return;
+  if (!(assist instanceof HTMLElement)) return;
 
-  const current = String(header.textContent || "").replace(/\s+/g, " ").trim();
+  const current = String(assist.textContent || "").replace(/\s+/g, " ").trim();
   const previousFormat = normalizePageNumberFormat(
-    header.dataset.pageNumberFormat || inferPageNumberFormatFromText(current)
+    assist.dataset.pageNumberFormat || inferPageNumberFormatFromText(current)
   );
-  const replaceTrailingNumber = header.dataset.pageNumberAuto === "true" && previousFormat === "number";
-  header.textContent = applyPageNumberTokenToText(current, pageNumber, format, { replaceTrailingNumber });
-  header.dataset.pageNumberAuto = "true";
-  header.dataset.pageNumberFormat = format;
-  focusEditableBlock(header);
+  const replaceTrailingNumber = assist.dataset.pageNumberAuto === "true" && previousFormat === "number";
+  assist.textContent = applyPageNumberTokenToText(current, pageNumber, format, { replaceTrailingNumber });
+  assist.dataset.pageNumberAuto = "true";
+  assist.dataset.pageNumberFormat = format;
+  assist.dataset.pageNumberPosition = position;
+  delete assist.dataset.pageNumberManual;
+  focusEditableBlock(assist);
   markDocumentChanged();
 };
 
 const removePageNumberAssistForPosition = (position = "top") => {
-  const targetKind = position === "bottom" ? "footer" : "header";
-  const assists = Array.from(editor.querySelectorAll(`.page-assist[data-page-kind="${targetKind}"]`));
+  const normalizedPosition = normalizePageNumberPosition(position, "top");
+  const assists = Array.from(
+    editor.querySelectorAll(`.page-assist[data-page-kind="page-number"][data-page-number-position="${normalizedPosition}"]`)
+  );
   let changed = false;
 
   assists.forEach((assist) => {
     if (!(assist instanceof HTMLElement)) return;
-    const hadAutoPageNumber = assist.dataset.pageNumberAuto === "true";
-    const pageNumberFormat = normalizePageNumberFormat(
-      assist.dataset.pageNumberFormat || inferPageNumberFormatFromText(assist.textContent || "")
-    );
-
-    if (hadAutoPageNumber) {
-      delete assist.dataset.pageNumberAuto;
-      delete assist.dataset.pageNumberFormat;
-      changed = true;
-    }
-    const hasExplicitPageToken = PAGE_NUMBER_TOKEN_PATTERN.test(String(assist.textContent || ""));
-    if ((hadAutoPageNumber || hasExplicitPageToken) && stripPageNumberTokenFromAssist(assist, { format: pageNumberFormat })) {
-      changed = true;
-    }
-    if (syncPageAssistVisibility(assist)) {
-      changed = true;
-    }
+    assist.remove();
+    changed = true;
   });
 
   if (!changed) return false;
@@ -2906,18 +3123,41 @@ const syncRepeatedPageAssists = (pageCount) => {
     changed = true;
   }
 
-  ["header", "footer"].forEach((kind) => {
-    const source = editor.querySelector(`.page-assist[data-page-kind="${kind}"][data-page-index="1"]`);
+  [
+    { kind: "header", selectorOptions: {}, insertOptions: {} },
+    { kind: "footer", selectorOptions: {}, insertOptions: {} },
+    {
+      kind: "page-number",
+      selectorOptions: { pageNumberPosition: "top" },
+      insertOptions: { pageNumberPosition: "top" }
+    },
+    {
+      kind: "page-number",
+      selectorOptions: { pageNumberPosition: "bottom" },
+      insertOptions: { pageNumberPosition: "bottom" }
+    }
+  ].forEach((entry) => {
+    const source = editor.querySelector(pageAssistSelector(entry.kind, 1, entry.selectorOptions));
     const sourceHtml = expectedPageAssistHtml(source, 1);
     const sourceAlign =
       source instanceof HTMLElement
         ? normalizeParagraphAlignment(source.dataset.align || source.style.textAlign || "right")
         : "right";
+    const sourceFormat =
+      source instanceof HTMLElement
+        ? normalizePageNumberFormat(source.dataset.pageNumberFormat || inferPageNumberFormatFromText(source.textContent || ""))
+        : "page";
 
     if (!sourceHtml) {
-      const stale = Array.from(
-        editor.querySelectorAll(`.page-assist[data-page-kind="${kind}"][data-page-repeat-auto='true']`)
-      );
+      const stale = Array.from(editor.querySelectorAll(".page-assist[data-page-repeat-auto='true']")).filter((assist) => {
+        if (!(assist instanceof HTMLElement)) return false;
+        if (normalizePageAssistKind(assist) !== entry.kind) return false;
+        if (entry.kind === "page-number") {
+          return normalizePageNumberPosition(assist.dataset.pageNumberPosition, "bottom") ===
+            normalizePageNumberPosition(entry.selectorOptions.pageNumberPosition, "bottom");
+        }
+        return true;
+      });
       stale.forEach((assist) => {
         const pageIndex = Number(assist.dataset.pageIndex || "0");
         if (pageIndex >= 2) {
@@ -2929,54 +3169,46 @@ const syncRepeatedPageAssists = (pageCount) => {
     }
 
     for (let pageNumber = 2; pageNumber <= maxPageCount; pageNumber += 1) {
-      let assist = editor.querySelector(
-        `.page-assist[data-page-kind="${kind}"][data-page-index="${pageNumber}"]`
-      );
+      let assist = editor.querySelector(pageAssistSelector(entry.kind, pageNumber, entry.selectorOptions));
       const expectedHtml = expectedPageAssistHtml(source, pageNumber);
       if (!expectedHtml) continue;
 
       if (!(assist instanceof HTMLElement)) {
-        assist = insertPageAssistForPage(kind, pageNumber - 1, {
+        assist = insertPageAssistForPage(entry.kind, pageNumber - 1, {
           focus: false,
           markDirty: false,
           initialText: "",
-          markAsPageNumber: source.dataset.pageNumberAuto === "true",
+          markAsPageNumber: source instanceof HTMLElement && source.dataset.pageNumberAuto === "true",
           repeatAuto: true,
-          align: sourceAlign
+          align: sourceAlign,
+          ...entry.insertOptions
         });
         if (assist instanceof HTMLElement) {
           assist.innerHTML = expectedHtml;
-          if (source.dataset.pageNumberAuto === "true") {
-            assist.dataset.pageNumberAuto = "true";
-            assist.dataset.pageNumberFormat = normalizePageNumberFormat(
-              source.dataset.pageNumberFormat || inferPageNumberFormatFromText(source.textContent || "")
-            );
-          } else {
-            delete assist.dataset.pageNumberAuto;
-            delete assist.dataset.pageNumberFormat;
-          }
-          if (syncPageAssistVisibility(assist)) {
-            changed = true;
-          }
           changed = true;
         }
-        continue;
       }
 
-      if (assist.dataset.pageRepeatAuto !== "true") continue;
+      if (!(assist instanceof HTMLElement) || assist.dataset.pageRepeatAuto !== "true") continue;
 
       if (assist.innerHTML !== expectedHtml) {
         assist.innerHTML = expectedHtml;
         changed = true;
       }
+      if (entry.kind === "page-number") {
+        const expectedPosition = normalizePageNumberPosition(entry.insertOptions.pageNumberPosition, "bottom");
+        if (assist.dataset.pageNumberPosition !== expectedPosition) {
+          assist.dataset.pageNumberPosition = expectedPosition;
+          changed = true;
+        }
+      }
       if (syncPageAssistVisibility(assist)) {
         changed = true;
       }
-      if (source.dataset.pageNumberAuto === "true") {
+      if (source instanceof HTMLElement && source.dataset.pageNumberAuto === "true") {
         assist.dataset.pageNumberAuto = "true";
-        assist.dataset.pageNumberFormat = normalizePageNumberFormat(
-          source.dataset.pageNumberFormat || inferPageNumberFormatFromText(source.textContent || "")
-        );
+        assist.dataset.pageNumberFormat = sourceFormat;
+        delete assist.dataset.pageNumberManual;
       } else {
         delete assist.dataset.pageNumberAuto;
         delete assist.dataset.pageNumberFormat;
@@ -3059,11 +3291,8 @@ const createPageCornerHotspot = (pageIndex, pageHeightPx) => {
 
   let selectedPageNumberFormat = "page";
   const resolvePageNumberFormatForPosition = (position) => {
-    const targetKind = position === "bottom" ? "footer" : "header";
     const pageNumber = Math.max(1, Math.floor(pageIndex) + 1);
-    const assist = editor.querySelector(
-      `.page-assist[data-page-kind="${targetKind}"][data-page-index="${pageNumber}"][data-page-number-auto="true"]`
-    );
+    const assist = editor.querySelector(pageAssistSelector("page-number", pageNumber, { pageNumberPosition: position }));
     if (!(assist instanceof HTMLElement)) return null;
     return normalizePageNumberFormat(
       assist.dataset.pageNumberFormat || inferPageNumberFormatFromText(assist.textContent || "")
@@ -3204,7 +3433,7 @@ const renderAutoPageBreakGuides = () => {
   const focusedAssist =
     document.activeElement instanceof Element ? document.activeElement.closest(".page-assist") : null;
   const focusedAssistKind =
-    focusedAssist instanceof HTMLElement && editor.contains(focusedAssist) ? normalizePageAssistKind(focusedAssist) : "";
+    focusedAssist instanceof HTMLElement && editor.contains(focusedAssist) ? resolvePageAssistBoundaryKind(focusedAssist) : "";
   const focusedAssistPage =
     focusedAssist instanceof HTMLElement && editor.contains(focusedAssist) ? normalizePageAssistPageNumber(focusedAssist) : 0;
   const showHeaderBand = focusedAssistKind === "header";
@@ -4089,6 +4318,18 @@ const commandTriggerVariants = (command) => {
   return [`\\${root}`];
 };
 
+const syncInlineCommandSelectionState = ({ scroll = false } = {}) => {
+  const items = Array.from(inlineCommandMenu.querySelectorAll(".inline-command-item"));
+  items.forEach((item, index) => {
+    const isSelected = index === inlineCommandIndex;
+    item.classList.toggle("is-selected", isSelected);
+    item.setAttribute("aria-selected", isSelected ? "true" : "false");
+  });
+  if (scroll) {
+    items[inlineCommandIndex]?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }
+};
+
 const replaceInlineTokenAtCaret = (context, replacement) => {
   const { node, offset, start } = context;
   const source = node.nodeValue || "";
@@ -4107,10 +4348,14 @@ const replaceInlineTokenAtCaret = (context, replacement) => {
 const renderInlineCommandMenu = () => {
   inlineCommandMenu.innerHTML = "";
   if (!inlineCommandOpen || inlineCommandMatches.length === 0) return;
+  inlineCommandMenu.setAttribute("role", "listbox");
 
   inlineCommandMatches.forEach((command, index) => {
-    const item = document.createElement("div");
+    const item = document.createElement("button");
+    item.type = "button";
     item.className = "inline-command-item";
+    item.setAttribute("role", "option");
+    item.setAttribute("aria-selected", index === inlineCommandIndex ? "true" : "false");
     if (index === inlineCommandIndex) {
       item.classList.add("is-selected");
     }
@@ -4122,9 +4367,26 @@ const renderInlineCommandMenu = () => {
     hint.className = "inline-command-hint";
     hint.textContent = command.label;
 
+    item.addEventListener("mousedown", (event) => {
+      event.preventDefault();
+    });
+    item.addEventListener("mouseenter", () => {
+      if (inlineCommandIndex === index) return;
+      inlineCommandIndex = index;
+      syncInlineCommandSelectionState();
+    });
+    item.addEventListener("click", (event) => {
+      event.preventDefault();
+      inlineCommandIndex = index;
+      syncInlineCommandSelectionState();
+      executeSelectedInlineCommandAtCaret();
+    });
+
     item.append(trigger, hint);
     inlineCommandMenu.append(item);
   });
+
+  syncInlineCommandSelectionState({ scroll: true });
 };
 
 const closeInlineCommandMenu = () => {
@@ -4135,6 +4397,8 @@ const closeInlineCommandMenu = () => {
   skipInlineCommandSyncOnce = false;
   inlineCommandMenu.classList.remove("is-open");
   inlineCommandMenu.setAttribute("aria-hidden", "true");
+  inlineCommandMenu.removeAttribute("role");
+  inlineCommandMenu.style.maxHeight = "";
   inlineCommandMenu.innerHTML = "";
 };
 
@@ -4143,10 +4407,27 @@ const positionInlineCommandMenu = () => {
   const rect = getCaretRect();
   if (!rect) return;
 
+  const viewportPadding = 12;
+  const verticalOffset = 8;
+  const viewportTop = window.scrollY + viewportPadding;
+  const viewportBottom = window.scrollY + window.innerHeight - viewportPadding;
+  const availableViewportHeight = Math.max(120, window.innerHeight - viewportPadding * 2);
+  const menuMaxHeight = Math.min(300, availableViewportHeight);
+  inlineCommandMenu.style.maxHeight = `${menuMaxHeight}px`;
+
   const menuWidth = inlineCommandMenu.offsetWidth || 220;
-  const left = Math.min(window.scrollX + rect.left, window.scrollX + window.innerWidth - menuWidth - 12);
-  const clampedLeft = Math.max(window.scrollX + 12, left);
-  const top = window.scrollY + rect.bottom + 8;
+  const desiredMenuHeight = inlineCommandMenu.scrollHeight || inlineCommandMenu.offsetHeight || menuMaxHeight;
+  const menuHeight = Math.min(desiredMenuHeight, menuMaxHeight);
+  const left = Math.min(window.scrollX + rect.left, window.scrollX + window.innerWidth - menuWidth - viewportPadding);
+  const clampedLeft = Math.max(window.scrollX + viewportPadding, left);
+  const belowTop = window.scrollY + rect.bottom + verticalOffset;
+  const aboveTop = window.scrollY + rect.top - menuHeight - verticalOffset;
+  let top = belowTop;
+  if (belowTop + menuHeight > viewportBottom && aboveTop >= viewportTop) {
+    top = aboveTop;
+  } else if (belowTop + menuHeight > viewportBottom) {
+    top = Math.max(viewportTop, viewportBottom - menuHeight);
+  }
 
   inlineCommandMenu.style.left = `${clampedLeft}px`;
   inlineCommandMenu.style.top = `${top}px`;
@@ -8245,11 +8526,20 @@ const isEscapedAt = (source, index) => {
   return slashCount % 2 === 1;
 };
 
-const findNextUnescapedDollar = (source, fromIndex) => {
-  for (let cursor = fromIndex; cursor < source.length; cursor += 1) {
-    if (source[cursor] === "$" && !isEscapedAt(source, cursor)) {
-      return cursor;
+const LATEX_OPEN_DELIMITER = "\\[";
+const LATEX_CLOSE_DELIMITER = "\\]";
+
+const findNextUnescapedDelimiter = (source, delimiter, fromIndex) => {
+  let cursor = Math.max(0, fromIndex);
+  while (cursor < source.length) {
+    const matchIndex = source.indexOf(delimiter, cursor);
+    if (matchIndex < 0) {
+      return -1;
     }
+    if (!isEscapedAt(source, matchIndex)) {
+      return matchIndex;
+    }
+    cursor = matchIndex + delimiter.length;
   }
   return -1;
 };
@@ -8259,7 +8549,7 @@ const splitLatexSegments = (source) => {
   let cursor = 0;
 
   while (cursor < source.length) {
-    const open = findNextUnescapedDollar(source, cursor);
+    const open = findNextUnescapedDelimiter(source, LATEX_OPEN_DELIMITER, cursor);
     if (open < 0) {
       segments.push({ type: "text", value: source.slice(cursor) });
       break;
@@ -8269,21 +8559,21 @@ const splitLatexSegments = (source) => {
       segments.push({ type: "text", value: source.slice(cursor, open) });
     }
 
-    const close = findNextUnescapedDollar(source, open + 1);
+    const close = findNextUnescapedDelimiter(source, LATEX_CLOSE_DELIMITER, open + LATEX_OPEN_DELIMITER.length);
     if (close < 0) {
       segments.push({ type: "text", value: source.slice(open) });
       break;
     }
 
-    const rawExpression = source.slice(open + 1, close);
+    const rawExpression = source.slice(open + LATEX_OPEN_DELIMITER.length, close);
     const expression = rawExpression.trim();
     if (!expression || rawExpression.includes("\n")) {
-      segments.push({ type: "text", value: source.slice(open, close + 1) });
+      segments.push({ type: "text", value: source.slice(open, close + LATEX_CLOSE_DELIMITER.length) });
     } else {
       segments.push({ type: "math", value: expression });
     }
 
-    cursor = close + 1;
+    cursor = close + LATEX_CLOSE_DELIMITER.length;
   }
 
   return segments;
@@ -8306,12 +8596,12 @@ const renderLatexNode = (node, latexSource) => {
     }
   }
 
-  node.textContent = `$${latexSource}$`;
+  node.textContent = `${LATEX_OPEN_DELIMITER}${latexSource}${LATEX_CLOSE_DELIMITER}`;
 };
 
 const transformLatexTextNode = (textNode) => {
   const source = textNode.nodeValue || "";
-  if (!source.includes("$")) return false;
+  if (!source.includes(LATEX_OPEN_DELIMITER)) return false;
 
   const segments = splitLatexSegments(source);
   const hasMath = segments.some((segment) => segment.type === "math");
@@ -8371,7 +8661,7 @@ const convertLatexTokenToEditableText = (token) => {
   const source = (token.dataset.latex || "").trim();
   if (!source) return false;
 
-  const textNode = document.createTextNode(`$${source}$`);
+  const textNode = document.createTextNode(`${LATEX_OPEN_DELIMITER}${source}${LATEX_CLOSE_DELIMITER}`);
   const parent = token.parentNode;
   if (!parent) return false;
   parent.replaceChild(textNode, token);
@@ -8379,7 +8669,7 @@ const convertLatexTokenToEditableText = (token) => {
   const selection = window.getSelection();
   if (!selection) return false;
   const range = document.createRange();
-  const offset = Math.max(1, textNode.nodeValue.length - 1);
+  const offset = Math.max(LATEX_OPEN_DELIMITER.length, textNode.nodeValue.length - LATEX_CLOSE_DELIMITER.length);
   range.setStart(textNode, offset);
   range.collapse(true);
   selection.removeAllRanges();
@@ -8471,7 +8761,7 @@ const renderInlineLatex = () => {
     if (!parent) continue;
     if (parent.closest(".latex-token, .citation-marker, [data-caret-marker='true']")) continue;
     if (parent.closest("[contenteditable='false']")) continue;
-    if (!node.nodeValue || !node.nodeValue.includes("$")) continue;
+    if (!node.nodeValue || !node.nodeValue.includes(LATEX_OPEN_DELIMITER)) continue;
     nodes.push(node);
   }
 
@@ -8802,6 +9092,375 @@ const normalizePaperPayload = (raw) => {
   };
 };
 
+const SAFE_PAPER_DROP_TAGS = new Set([
+  "script",
+  "style",
+  "iframe",
+  "frame",
+  "object",
+  "embed",
+  "meta",
+  "link",
+  "base",
+  "form",
+  "input",
+  "button",
+  "select",
+  "option",
+  "textarea"
+]);
+const SAFE_PAPER_INLINE_TAGS = new Set(["a", "b", "br", "del", "em", "i", "s", "span", "strike", "strong", "sub", "sup", "u"]);
+const SAFE_PAPER_BODY_TAGS = new Set(["blockquote", "div", "h2", "h3", "h4", "h5", "li", "ol", "p", "ul"]);
+const SAFE_PAPER_TABLE_STAT_KINDS = new Set(["col-mean", "col-std", "row-mean", "row-std"]);
+const MAX_SANITIZED_TABLE_ROWS = 200;
+const MAX_SANITIZED_TABLE_COLS = 50;
+
+const sanitizePaperTextValue = (value) => String(value || "").replace(/\u0000/g, "");
+
+const sanitizePaperToken = (value, options = {}) => {
+  const { pattern = /[^a-z0-9._:-]/gi, maxLength = 160 } = options;
+  const normalized = String(value || "").replace(pattern, "").slice(0, maxLength);
+  return normalized;
+};
+
+const normalizeSafeFontSize = (value) => {
+  const raw = String(value || "").trim();
+  const match = raw.match(/^([0-9]+(?:\.[0-9]+)?)(px|pt|em|rem|%)$/i);
+  if (!match) return "";
+  const amount = Number(match[1]);
+  const unit = match[2].toLowerCase();
+  if (!Number.isFinite(amount) || amount <= 0) return "";
+  if ((unit === "px" && (amount < 8 || amount > 96)) || (unit === "pt" && (amount < 6 || amount > 72))) {
+    return "";
+  }
+  if ((unit === "em" || unit === "rem") && (amount < 0.5 || amount > 6)) {
+    return "";
+  }
+  if (unit === "%" && (amount < 50 || amount > 600)) {
+    return "";
+  }
+  return `${amount}${unit}`;
+};
+
+const sanitizePaperInlineStyle = (value, options = {}) => {
+  const { allowTextAlign = true, allowFontSize = true } = options;
+  const probe = document.createElement("span");
+  probe.setAttribute("style", String(value || ""));
+  const output = [];
+
+  if (allowTextAlign) {
+    const rawAlign = String(probe.style.textAlign || "").trim();
+    const align = rawAlign ? normalizeParagraphAlignment(rawAlign) : "";
+    if (align && PARAGRAPH_ALIGNMENTS.has(align)) {
+      output.push(`text-align: ${align}`);
+    }
+  }
+
+  if (allowFontSize) {
+    const fontSize = normalizeSafeFontSize(probe.style.fontSize || "");
+    if (fontSize) {
+      output.push(`font-size: ${fontSize}`);
+    }
+  }
+
+  return output.join("; ");
+};
+
+const sanitizePaperHref = (value) => {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  try {
+    const parsed = new URL(raw, window.location.href);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:" || parsed.protocol === "mailto:" || parsed.protocol === "tel:") {
+      return raw;
+    }
+  } catch {
+    return "";
+  }
+  return "";
+};
+
+const sanitizePaperImageSource = (value) => {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  if (/^blob:/i.test(raw)) return raw;
+  if (/^data:image\/[a-z0-9.+-]+;base64,[a-z0-9+/=\s]+$/i.test(raw)) return raw;
+  try {
+    const parsed = new URL(raw, window.location.href);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return raw;
+    }
+  } catch {
+    return "";
+  }
+  return "";
+};
+
+const sanitizePaperNodes = (nodeList, mode) => {
+  const sanitized = [];
+  Array.from(nodeList || []).forEach((node) => {
+    sanitized.push(...sanitizePaperNode(node, mode));
+  });
+  return sanitized;
+};
+
+const appendSanitizedPaperChildren = (source, target, mode) => {
+  sanitizePaperNodes(source.childNodes, mode).forEach((child) => target.append(child));
+};
+
+const sanitizeCitationMarkerElement = (source) => {
+  const marker = document.createElement("span");
+  marker.className = "citation-marker";
+  marker.setAttribute("contenteditable", "false");
+  const citationId = sanitizePaperToken(source.dataset.citeId || "", {
+    pattern: /[^a-z0-9_-]/gi,
+    maxLength: 120
+  });
+  if (citationId) {
+    marker.dataset.citeId = citationId;
+  }
+  const citationOrder = Number.parseInt(source.dataset.citeOrder || source.textContent || "", 10);
+  if (Number.isFinite(citationOrder) && citationOrder > 0) {
+    marker.dataset.citeOrder = String(citationOrder);
+    marker.textContent = String(citationOrder);
+  } else {
+    marker.textContent = sanitizePaperTextValue(source.textContent).replace(/\s+/g, " ").trim();
+  }
+  return marker;
+};
+
+const sanitizeLatexTokenElement = (source) => {
+  const latexSource = sanitizePaperTextValue(source.dataset.latex || source.textContent).trim();
+  if (!latexSource) return null;
+  const token = document.createElement("span");
+  token.className = "latex-token";
+  token.setAttribute("contenteditable", "false");
+  token.dataset.latex = latexSource;
+  token.textContent = latexSource;
+  return token;
+};
+
+const sanitizeGraphBlockElement = (source) => {
+  const state = normalizeGraphState(readGraphState(source));
+  const block = createGraphBlock(state);
+  if (!(block instanceof HTMLElement)) return null;
+  return block;
+};
+
+const sanitizeImageBlockElement = (source) => {
+  const state = readImageState(source);
+  const src = sanitizePaperImageSource(state.src);
+  if (!src) return null;
+  return createImageBlock({
+    src,
+    alt: sanitizePaperTextValue(state.alt).trim(),
+    caption: sanitizePaperTextValue(state.caption).replace(/\s+/g, " ").trim(),
+    align: normalizeImageAlign(state.align),
+    wrap: normalizeImageWrap(state.wrap),
+    width: normalizeImageWidth(state.width, state.wrap)
+  });
+};
+
+const sanitizePageAssistElement = (source) => {
+  const assist = document.createElement("div");
+  assist.className = "page-assist";
+  assist.dataset.pageAssist = "true";
+  const kind = normalizePageAssistKind(source);
+  const pageNumber = Math.max(1, Number.parseInt(source.dataset.pageIndex || "1", 10) || 1);
+  const align = normalizeParagraphAlignment(source.dataset.align || source.style.textAlign || source.getAttribute("align") || "right");
+  assist.dataset.pageKind = kind;
+  assist.dataset.pageIndex = String(pageNumber);
+  assist.dataset.align = align;
+  assist.dataset.placeholder = resolveAssistPlaceholder(kind);
+  if (kind === "page-number") {
+    assist.dataset.pageNumberPosition = normalizePageNumberPosition(source.dataset.pageNumberPosition, "bottom");
+  }
+  assist.dataset.pageRepeatAuto = source.dataset.pageRepeatAuto === "true" ? "true" : "false";
+  if (source.dataset.pageRepeatManual === "true") {
+    assist.dataset.pageRepeatManual = "true";
+  }
+  if (source.dataset.pageNumberAuto === "true") {
+    assist.dataset.pageNumberAuto = "true";
+    assist.dataset.pageNumberFormat = normalizePageNumberFormat(
+      source.dataset.pageNumberFormat || inferPageNumberFormatFromText(source.textContent || "")
+    );
+  } else if (source.dataset.pageNumberManual === "true") {
+    assist.dataset.pageNumberManual = "true";
+  }
+  assist.style.textAlign = align;
+  assist.setAttribute("aria-label", `${resolveAssistPlaceholder(kind)} for page ${pageNumber}`);
+  appendSanitizedPaperChildren(source, assist, "title");
+  return assist;
+};
+
+const sanitizeEditorTableElement = (source) => {
+  if (!(source instanceof HTMLTableElement)) return null;
+  const sourceRows = tableRows(source).slice(0, MAX_SANITIZED_TABLE_ROWS);
+  const columnCount = Math.max(
+    1,
+    Math.min(
+      MAX_SANITIZED_TABLE_COLS,
+      sourceRows.reduce((max, row) => Math.max(max, row.cells.length), 0)
+    )
+  );
+
+  const table = document.createElement("table");
+  table.className = "editor-table";
+  table.dataset.paperTable = "true";
+  table.setAttribute("draggable", "true");
+  const safeStyle = sanitizePaperInlineStyle(source.getAttribute("style") || "", {
+    allowTextAlign: false,
+    allowFontSize: true
+  });
+  if (safeStyle) {
+    table.setAttribute("style", safeStyle);
+  }
+
+  const caption = document.createElement("caption");
+  caption.className = "editor-table-caption";
+  const sourceCaption = source.querySelector("caption");
+  const captionText = sanitizePaperTextValue(sourceCaption ? sourceCaption.textContent : "")
+    .replace(/\u00a0/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  caption.textContent = captionText || "Table caption";
+  table.append(caption);
+
+  const tbody = document.createElement("tbody");
+  if (sourceRows.length === 0) {
+    const fallback = buildDefaultEditorTable();
+    return fallback instanceof HTMLTableElement ? fallback : table;
+  }
+
+  sourceRows.forEach((sourceRow, rowIndex) => {
+    const row = document.createElement("tr");
+    const rowKind = String(sourceRow.dataset.tableStatRow || "").trim().toLowerCase();
+    if (SAFE_PAPER_TABLE_STAT_KINDS.has(rowKind)) {
+      row.dataset.tableStatRow = rowKind;
+    }
+    for (let colIndex = 0; colIndex < columnCount; colIndex += 1) {
+      const sourceCell = sourceRow.cells[colIndex];
+      const cell = document.createElement(rowIndex === 0 ? "th" : "td");
+      const cellText = sanitizePaperTextValue(sourceCell ? sourceCell.textContent : "")
+        .replace(/\u00a0/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+      if (cellText) {
+        cell.textContent = cellText;
+      } else {
+        cell.innerHTML = "<br>";
+      }
+      const columnKind = String(sourceCell instanceof HTMLElement ? sourceCell.dataset.tableStatCol || "" : "")
+        .trim()
+        .toLowerCase();
+      if (SAFE_PAPER_TABLE_STAT_KINDS.has(columnKind)) {
+        cell.dataset.tableStatCol = columnKind;
+      }
+      if (sourceCell instanceof HTMLElement && sourceCell.dataset.tableUncertainty === "true") {
+        cell.dataset.tableUncertainty = "true";
+      }
+      row.append(cell);
+    }
+    tbody.append(row);
+  });
+  table.append(tbody);
+  return table;
+};
+
+const sanitizePaperNode = (node, mode) => {
+  if (!node) return [];
+  if (node.nodeType === Node.TEXT_NODE) {
+    return [document.createTextNode(sanitizePaperTextValue(node.nodeValue))];
+  }
+  if (node.nodeType !== Node.ELEMENT_NODE) return [];
+
+  const element = node;
+  const tagName = element.tagName.toLowerCase();
+
+  if (mode !== "title") {
+    if (element.classList.contains("graph-block")) {
+      const block = sanitizeGraphBlockElement(element);
+      return block ? [block] : [];
+    }
+    if (element.classList.contains("image-block")) {
+      const block = sanitizeImageBlockElement(element);
+      return block ? [block] : [];
+    }
+    if (element.classList.contains("page-break-block")) {
+      return [createPageBreakBlock()];
+    }
+    if (element.classList.contains("page-assist")) {
+      return [sanitizePageAssistElement(element)];
+    }
+    if (element.classList.contains("citation-marker")) {
+      return [sanitizeCitationMarkerElement(element)];
+    }
+    if (element.classList.contains("latex-token")) {
+      const token = sanitizeLatexTokenElement(element);
+      return token ? [token] : [];
+    }
+    if (tagName === "table" && !element.closest(".graph-block, .image-block")) {
+      const table = sanitizeEditorTableElement(element);
+      return table ? [table] : [];
+    }
+  } else {
+    if (element.classList.contains("citation-marker")) {
+      return [sanitizeCitationMarkerElement(element)];
+    }
+    if (element.classList.contains("latex-token")) {
+      const token = sanitizeLatexTokenElement(element);
+      return token ? [token] : [];
+    }
+  }
+
+  if (SAFE_PAPER_DROP_TAGS.has(tagName)) {
+    return [];
+  }
+
+  if (mode === "title") {
+    if (tagName === "br") {
+      return [document.createElement("br")];
+    }
+    if (!SAFE_PAPER_INLINE_TAGS.has(tagName)) {
+      return sanitizePaperNodes(element.childNodes, "title");
+    }
+  } else if (!SAFE_PAPER_BODY_TAGS.has(tagName) && !SAFE_PAPER_INLINE_TAGS.has(tagName)) {
+    return sanitizePaperNodes(element.childNodes, "body");
+  }
+
+  const clean = document.createElement(tagName);
+  const safeStyle = sanitizePaperInlineStyle(element.getAttribute("style") || "");
+  if (safeStyle) {
+    clean.setAttribute("style", safeStyle);
+  }
+
+  if (tagName === "a") {
+    const href = sanitizePaperHref(element.getAttribute("href"));
+    if (href) {
+      clean.setAttribute("href", href);
+      clean.setAttribute("rel", "noopener noreferrer");
+    }
+  }
+
+  if (tagName === "ol") {
+    const start = Number.parseInt(element.getAttribute("start") || "", 10);
+    if (Number.isFinite(start) && start > 0) {
+      clean.setAttribute("start", String(start));
+    }
+  }
+
+  appendSanitizedPaperChildren(element, clean, mode === "title" ? "title" : "body");
+  return [clean];
+};
+
+const sanitizePaperFragment = (html, mode = "body") => {
+  const template = document.createElement("template");
+  template.innerHTML = typeof html === "string" ? html : "";
+  const fragment = document.createDocumentFragment();
+  sanitizePaperNodes(template.content.childNodes, mode).forEach((node) => fragment.append(node));
+  return fragment;
+};
+
 const hydrateFromPayload = (payload, options = {}) => {
   const { fileName = DEFAULT_FILE_NAME, isDirty = false, keepHandle = false, keepNativePath = false } = options;
   activeDocumentToken += 1;
@@ -8831,8 +9490,16 @@ const hydrateFromPayload = (payload, options = {}) => {
   editRevision = 0;
   autoSaveQueuedRevision = 0;
 
-  titleField.innerHTML = payload.document.titleHtml;
-  editor.innerHTML = payload.document.bodyHtml;
+  const sanitizedTitle = sanitizePaperFragment(payload.document.titleHtml, "title");
+  const sanitizedBody = sanitizePaperFragment(payload.document.bodyHtml, "body");
+  if (sanitizedBody.childNodes.length === 0) {
+    const paragraph = document.createElement("p");
+    paragraph.innerHTML = "<br>";
+    sanitizedBody.append(paragraph);
+  }
+
+  titleField.replaceChildren(sanitizedTitle);
+  editor.replaceChildren(sanitizedBody);
   normalizeEditorTopLevelBlockStructure();
   stripTransientPageFlowState(editor, true);
   setFeatureStateBag(payload.features.state);
@@ -9524,6 +10191,17 @@ const paragraphKindFromTag = (tagName) => {
   return "body";
 };
 
+const plainTextRuns = (text, options = {}) => {
+  return normalizeRuns([
+    {
+      ...cloneInlineStyle(BASE_INLINE_STYLE),
+      bold: options.bold === true,
+      italic: options.italic === true,
+      text: String(text || "")
+    }
+  ]);
+};
+
 const parseBlockNode = (node) => {
   if (!node) return null;
 
@@ -9581,6 +10259,16 @@ const parseBlockNode = (node) => {
     };
   }
 
+  if (tagName === "table" && !node.closest(".graph-block, .image-block")) {
+    const tableState = readTableStateFromLiveDom(node);
+    return {
+      kind: "table",
+      align: paragraphAlignmentFromNode(node),
+      caption: String(tableState.caption || "").replace(/\s+/g, " ").trim(),
+      rows: tableState.rows.map((row) => row.map((cell) => String(cell || "")))
+    };
+  }
+
   if (tagName === "br") {
     return { kind: "body", align: "left", runs: [] };
   }
@@ -9630,6 +10318,7 @@ const buildDocumentModel = () => {
   const paragraphHasVisibleText = (paragraph) => {
     if (!paragraph || paragraph.kind === "pageBreak") return false;
     if (paragraph.kind === "mediaFigure") return true;
+    if (paragraph.kind === "table") return true;
     if (!Array.isArray(paragraph.runs)) return false;
     return paragraph.runs.some((run) => !run.break && String(run.text || "").trim().length > 0);
   };
@@ -9998,6 +10687,54 @@ const buildDocxParagraphXml = (paragraph) => {
   return `<w:p>${docxParagraphProperties(paragraph.kind, paragraph.align)}${buildDocxRunsXml(paragraph.runs, paragraph.kind)}</w:p>`;
 };
 
+const buildDocxTableCellParagraphXml = (text, options = {}) => {
+  const runs = plainTextRuns(text, { bold: options.header === true });
+  return `<w:p>${docxParagraphProperties("body", "left")}${buildDocxRunsXml(runs, "body")}</w:p>`;
+};
+
+const buildDocxTableXml = (paragraph, docxLayout) => {
+  const rows = Array.isArray(paragraph && paragraph.rows) ? paragraph.rows.filter((row) => Array.isArray(row)) : [];
+  if (rows.length === 0) return "";
+
+  const layout = normalizeDocxLayout(docxLayout);
+  const columnCount = Math.max(1, rows.reduce((max, row) => Math.max(max, row.length), 0));
+  const tableWidthTwips = Math.max(1440, layout.widthTwips - layout.marginLeftTwips - layout.marginRightTwips);
+  const columnWidthTwips = Math.max(720, Math.floor(tableWidthTwips / columnCount));
+  const normalizedRows = rows.map((row) => {
+    const output = row.slice(0, columnCount).map((cell) => String(cell == null ? "" : cell));
+    while (output.length < columnCount) {
+      output.push("");
+    }
+    return output;
+  });
+
+  const tableRowsXml = normalizedRows
+    .map((row, rowIndex) => {
+      const isHeader = rowIndex === 0;
+      const cellsXml = row
+        .map((cellText) => {
+          const shading = isHeader ? '<w:shd w:val="clear" w:color="auto" w:fill="E0E0E0"/>' : "";
+          return (
+            `<w:tc><w:tcPr><w:tcW w:w="${columnWidthTwips}" w:type="dxa"/>${shading}</w:tcPr>` +
+            `${buildDocxTableCellParagraphXml(cellText, { header: isHeader })}</w:tc>`
+          );
+        })
+        .join("");
+      return `<w:tr>${cellsXml}</w:tr>`;
+    })
+    .join("");
+
+  return (
+    `<w:tbl><w:tblPr><w:tblW w:w="${tableWidthTwips}" w:type="dxa"/>` +
+    '<w:tblBorders><w:top w:val="single" w:sz="8" w:space="0" w:color="000000"/><w:left w:val="single" w:sz="4" w:space="0" w:color="000000"/>' +
+    '<w:bottom w:val="single" w:sz="8" w:space="0" w:color="000000"/><w:right w:val="single" w:sz="4" w:space="0" w:color="000000"/>' +
+    '<w:insideH w:val="single" w:sz="4" w:space="0" w:color="000000"/><w:insideV w:val="single" w:sz="4" w:space="0" w:color="000000"/></w:tblBorders>' +
+    "</w:tblPr><w:tblGrid>" +
+    Array.from({ length: columnCount }, () => `<w:gridCol w:w="${columnWidthTwips}"/>`).join("") +
+    `</w:tblGrid>${tableRowsXml}</w:tbl>`
+  );
+};
+
 const normalizeDocxLayout = (docxLayout) => {
   if (docxLayout && typeof docxLayout === "object") {
     const widthTwips = Number(docxLayout.widthTwips);
@@ -10111,6 +10848,20 @@ const buildDocxDocumentXml = (model, docxLayout, mediaContext = null) => {
         paragraphXmlParts.push(buildDocxMediaDrawingXml(mediaEntry, paragraph));
       }
       paragraphXmlParts.push(buildDocxParagraphXml(mediaCaptionParagraphFromMedia(paragraph)));
+      return;
+    }
+    if (paragraph.kind === "table") {
+      const captionText = String(paragraph.caption || "").trim();
+      if (captionText) {
+        paragraphXmlParts.push(
+          buildDocxParagraphXml({
+            kind: "body",
+            align: "center",
+            runs: plainTextRuns(captionText)
+          })
+        );
+      }
+      paragraphXmlParts.push(buildDocxTableXml(paragraph, layout));
       return;
     }
     paragraphXmlParts.push(buildDocxParagraphXml(paragraph));
@@ -10590,6 +11341,108 @@ const renderModelToPdfStreams = async (model, pdfLayout) => {
     cursorY = pdfLayout.pageHeight - pdfLayout.marginTop;
   };
 
+  const renderStyledLine = ({ line, align = "left", lineX, lineY, widthLimit, allowJustify = true }) => {
+    const rawLineWidth = line.segments.reduce((total, segment) => total + segment.width, 0);
+    const spaceCount = line.segments.reduce((total, segment) => total + (segment.isSpace ? 1 : 0), 0);
+    const shouldJustify =
+      allowJustify && align === "justify" && !line.isLastLine && spaceCount > 0 && rawLineWidth < widthLimit;
+    const justifySpaceDelta = shouldJustify ? (widthLimit - rawLineWidth) / spaceCount : 0;
+
+    let drawLineX = lineX;
+    if (!shouldJustify) {
+      if (align === "center") {
+        drawLineX += Math.max(0, (widthLimit - rawLineWidth) / 2);
+      } else if (align === "right") {
+        drawLineX += Math.max(0, widthLimit - rawLineWidth);
+      }
+    }
+
+    let penX = drawLineX;
+    const textCommands = ["BT", `1 0 0 1 ${formatPdfNumber(drawLineX)} ${formatPdfNumber(lineY)} Tm`];
+    if (shouldJustify && justifySpaceDelta > 0) {
+      textCommands.push(`${formatPdfNumber(justifySpaceDelta)} Tw`);
+    }
+    const drawCommands = [];
+    let currentFont = "";
+    let currentFontSize = -1;
+    let currentRise = 0;
+
+    for (const segment of line.segments) {
+      if (!segment.text) continue;
+
+      const fontKey = pdfFontKeyFromStyle(segment.style);
+      const fontSize = segment.style.fontSize;
+      const rise = segment.style.rise;
+
+      if (fontKey !== currentFont || fontSize !== currentFontSize) {
+        textCommands.push(`/${fontKey} ${formatPdfNumber(fontSize)} Tf`);
+        currentFont = fontKey;
+        currentFontSize = fontSize;
+      }
+
+      if (rise !== currentRise) {
+        textCommands.push(`${formatPdfNumber(rise)} Ts`);
+        currentRise = rise;
+      }
+
+      textCommands.push(`(${escapePdfString(segment.text)}) Tj`);
+
+      const segmentWidth = segment.width + (shouldJustify && segment.isSpace ? justifySpaceDelta : 0);
+      const nextPenX = penX + segmentWidth;
+      const rectTop = lineY + fontSize * 0.82 + rise;
+      const rectBottom = lineY - fontSize * 0.36 + rise;
+
+      if (segment.citationId) {
+        citationLinks.push({
+          citationId: segment.citationId,
+          pageIndex,
+          rect: {
+            x1: Math.min(penX, nextPenX),
+            y1: Math.min(rectBottom, rectTop),
+            x2: Math.max(penX, nextPenX),
+            y2: Math.max(rectBottom, rectTop)
+          }
+        });
+      }
+
+      if (segment.referenceAnchorId && !referenceTargets.has(segment.referenceAnchorId) && !segment.isSpace) {
+        referenceTargets.set(segment.referenceAnchorId, {
+          pageIndex,
+          x: penX,
+          y: lineY + fontSize
+        });
+      }
+
+      if (segment.style.underline) {
+        const underlineY = lineY - 1 + rise;
+        drawCommands.push(
+          `${formatPdfNumber(penX)} ${formatPdfNumber(underlineY)} m ${formatPdfNumber(nextPenX)} ${formatPdfNumber(underlineY)} l S`
+        );
+      }
+      if (segment.style.strike) {
+        const strikeY = lineY + fontSize * 0.3 + rise;
+        drawCommands.push(
+          `${formatPdfNumber(penX)} ${formatPdfNumber(strikeY)} m ${formatPdfNumber(nextPenX)} ${formatPdfNumber(strikeY)} l S`
+        );
+      }
+
+      penX = nextPenX;
+    }
+
+    if (currentRise !== 0) {
+      textCommands.push("0 Ts");
+    }
+    if (shouldJustify && justifySpaceDelta > 0) {
+      textCommands.push("0 Tw");
+    }
+    textCommands.push("ET");
+    pushCommand(`${textCommands.join("\n")}\n`);
+
+    if (drawCommands.length > 0) {
+      pushCommand(`0 G\n0.5 w\n${drawCommands.join("\n")}\n`);
+    }
+  };
+
   const renderTextParagraph = (paragraph) => {
     const layout = buildParagraphLayout(paragraph, pdfLayout);
     const paragraphAlign = normalizeParagraphAlignment(paragraph.align);
@@ -10600,114 +11453,144 @@ const renderModelToPdfStreams = async (model, pdfLayout) => {
 
       const lineIndent = line.firstLine ? layout.metrics.firstLineIndent : 0;
       const widthLimit = Math.max(0, pdfLayout.innerWidth - lineIndent);
-      const rawLineWidth = line.segments.reduce((total, segment) => total + segment.width, 0);
-      const spaceCount = line.segments.reduce((total, segment) => total + (segment.isSpace ? 1 : 0), 0);
-      const isLastLine = lineIndex === layout.lines.length - 1;
-      const shouldJustify =
-        paragraphAlign === "justify" && !isLastLine && spaceCount > 0 && rawLineWidth < widthLimit;
-      const justifySpaceDelta = shouldJustify ? (widthLimit - rawLineWidth) / spaceCount : 0;
-
-      let lineX = pdfLayout.marginLeft + lineIndent;
-      if (!shouldJustify) {
-        if (paragraphAlign === "center") {
-          lineX += Math.max(0, (widthLimit - rawLineWidth) / 2);
-        } else if (paragraphAlign === "right") {
-          lineX += Math.max(0, widthLimit - rawLineWidth);
-        }
-      }
-
       const lineY = cursorY;
-      let penX = lineX;
-
-      const textCommands = ["BT", `1 0 0 1 ${formatPdfNumber(lineX)} ${formatPdfNumber(lineY)} Tm`];
-      if (shouldJustify && justifySpaceDelta > 0) {
-        textCommands.push(`${formatPdfNumber(justifySpaceDelta)} Tw`);
-      }
-      const drawCommands = [];
-
-      let currentFont = "";
-      let currentFontSize = -1;
-      let currentRise = 0;
-
-      for (const segment of line.segments) {
-        if (!segment.text) continue;
-
-        const fontKey = pdfFontKeyFromStyle(segment.style);
-        const fontSize = segment.style.fontSize;
-        const rise = segment.style.rise;
-
-        if (fontKey !== currentFont || fontSize !== currentFontSize) {
-          textCommands.push(`/${fontKey} ${formatPdfNumber(fontSize)} Tf`);
-          currentFont = fontKey;
-          currentFontSize = fontSize;
-        }
-
-        if (rise !== currentRise) {
-          textCommands.push(`${formatPdfNumber(rise)} Ts`);
-          currentRise = rise;
-        }
-
-        textCommands.push(`(${escapePdfString(segment.text)}) Tj`);
-
-        const segmentWidth = segment.width + (shouldJustify && segment.isSpace ? justifySpaceDelta : 0);
-        const nextPenX = penX + segmentWidth;
-        const rectTop = lineY + fontSize * 0.82 + rise;
-        const rectBottom = lineY - fontSize * 0.36 + rise;
-
-        if (segment.citationId) {
-          citationLinks.push({
-            citationId: segment.citationId,
-            pageIndex,
-            rect: {
-              x1: Math.min(penX, nextPenX),
-              y1: Math.min(rectBottom, rectTop),
-              x2: Math.max(penX, nextPenX),
-              y2: Math.max(rectBottom, rectTop)
-            }
-          });
-        }
-
-        if (segment.referenceAnchorId && !referenceTargets.has(segment.referenceAnchorId) && !segment.isSpace) {
-          referenceTargets.set(segment.referenceAnchorId, {
-            pageIndex,
-            x: penX,
-            y: lineY + fontSize
-          });
-        }
-
-        if (segment.style.underline) {
-          const underlineY = lineY - 1 + rise;
-          drawCommands.push(
-            `${formatPdfNumber(penX)} ${formatPdfNumber(underlineY)} m ${formatPdfNumber(nextPenX)} ${formatPdfNumber(underlineY)} l S`
-          );
-        }
-        if (segment.style.strike) {
-          const strikeY = lineY + fontSize * 0.3 + rise;
-          drawCommands.push(
-            `${formatPdfNumber(penX)} ${formatPdfNumber(strikeY)} m ${formatPdfNumber(nextPenX)} ${formatPdfNumber(strikeY)} l S`
-          );
-        }
-
-        penX = nextPenX;
-      }
-
-      if (currentRise !== 0) {
-        textCommands.push("0 Ts");
-      }
-      if (shouldJustify && justifySpaceDelta > 0) {
-        textCommands.push("0 Tw");
-      }
-      textCommands.push("ET");
-      pushCommand(`${textCommands.join("\n")}\n`);
-
-      if (drawCommands.length > 0) {
-        pushCommand(`0 G\n0.5 w\n${drawCommands.join("\n")}\n`);
-      }
+      renderStyledLine({
+        line: { ...line, isLastLine: lineIndex === layout.lines.length - 1 },
+        align: paragraphAlign,
+        lineX: pdfLayout.marginLeft + lineIndent,
+        lineY,
+        widthLimit
+      });
 
       cursorY -= layout.metrics.lineHeight;
     }
 
     cursorY -= layout.metrics.afterSpacing;
+    if (cursorY < pdfLayout.marginBottom) {
+      pages.push([]);
+      pageIndex += 1;
+      cursorY = pdfLayout.pageHeight - pdfLayout.marginTop;
+    }
+  };
+
+  const buildPdfTableRowRender = (row, rowIndex, columnWidth, cellInnerWidth) => {
+    const isHeader = rowIndex === 0;
+    const layouts = row.map((cellText) =>
+      buildParagraphLayout(
+        {
+          kind: "body",
+          align: "left",
+          runs: plainTextRuns(cellText, { bold: isHeader })
+        },
+        {
+          ...pdfLayout,
+          innerWidth: cellInnerWidth
+        }
+      )
+    );
+    const contentHeight = layouts.reduce(
+      (max, layout) => Math.max(max, Math.max(layout.metrics.lineHeight, layout.lines.length * layout.metrics.lineHeight)),
+      0
+    );
+    return {
+      isHeader,
+      columnWidth,
+      layouts,
+      rowHeight: contentHeight + 12
+    };
+  };
+
+  const renderPdfTableRow = (rowRender) => {
+    const rowTop = cursorY;
+    const rowBottom = rowTop - rowRender.rowHeight;
+    const borderCommands = [];
+
+    rowRender.layouts.forEach((layout, columnIndex) => {
+      const cellX = pdfLayout.marginLeft + columnIndex * rowRender.columnWidth;
+      const cellInnerWidth = Math.max(20, rowRender.columnWidth - 16);
+      if (rowRender.isHeader) {
+        pushCommand(
+          `0.9 g\n${formatPdfNumber(cellX)} ${formatPdfNumber(rowBottom)} ${formatPdfNumber(rowRender.columnWidth)} ${formatPdfNumber(
+            rowRender.rowHeight
+          )} re f\n0 G\n`
+        );
+      }
+
+      let lineY = rowTop - 6 - layout.metrics.fontSize;
+      layout.lines.forEach((line, lineIndex) => {
+        renderStyledLine({
+          line: { ...line, isLastLine: lineIndex === layout.lines.length - 1 },
+          align: "left",
+          lineX: cellX + 8,
+          lineY,
+          widthLimit: cellInnerWidth,
+          allowJustify: false
+        });
+        lineY -= layout.metrics.lineHeight;
+      });
+
+      borderCommands.push(
+        `${formatPdfNumber(cellX)} ${formatPdfNumber(rowBottom)} ${formatPdfNumber(rowRender.columnWidth)} ${formatPdfNumber(
+          rowRender.rowHeight
+        )} re S`
+      );
+    });
+
+    if (borderCommands.length > 0) {
+      pushCommand(`0 G\n0.5 w\n${borderCommands.join("\n")}\n`);
+    }
+    cursorY = rowBottom;
+  };
+
+  const renderTableParagraph = (paragraph) => {
+    const rows = Array.isArray(paragraph && paragraph.rows) ? paragraph.rows.filter((row) => Array.isArray(row)) : [];
+    if (rows.length === 0) {
+      const captionText = String(paragraph && paragraph.caption ? paragraph.caption : "").trim();
+      if (captionText) {
+        renderTextParagraph({
+          kind: "body",
+          align: "center",
+          runs: plainTextRuns(captionText)
+        });
+      }
+      return;
+    }
+
+    const captionText = String(paragraph.caption || "").trim();
+    if (captionText) {
+      renderTextParagraph({
+        kind: "body",
+        align: "center",
+        runs: plainTextRuns(captionText)
+      });
+    }
+
+    const columnCount = Math.max(1, rows.reduce((max, row) => Math.max(max, row.length), 0));
+    const normalizedRows = rows.map((row) => {
+      const output = row.slice(0, columnCount).map((cell) => String(cell == null ? "" : cell));
+      while (output.length < columnCount) {
+        output.push("");
+      }
+      return output;
+    });
+    const columnWidth = pdfLayout.innerWidth / columnCount;
+    const cellInnerWidth = Math.max(20, columnWidth - 16);
+    const headerRow = buildPdfTableRowRender(normalizedRows[0], 0, columnWidth, cellInnerWidth);
+
+    for (let rowIndex = 0; rowIndex < normalizedRows.length; rowIndex += 1) {
+      const rowRender = buildPdfTableRowRender(normalizedRows[rowIndex], rowIndex, columnWidth, cellInnerWidth);
+      if (cursorY - rowRender.rowHeight < pdfLayout.marginBottom && currentPage().length > 0) {
+        pages.push([]);
+        pageIndex += 1;
+        cursorY = pdfLayout.pageHeight - pdfLayout.marginTop;
+        if (rowIndex > 0) {
+          renderPdfTableRow(headerRow);
+        }
+      }
+      renderPdfTableRow(rowRender);
+    }
+
+    cursorY -= 8;
     if (cursorY < pdfLayout.marginBottom) {
       pages.push([]);
       pageIndex += 1;
@@ -10723,6 +11606,11 @@ const renderModelToPdfStreams = async (model, pdfLayout) => {
         pageIndex += 1;
         cursorY = pdfLayout.pageHeight - pdfLayout.marginTop;
       }
+      continue;
+    }
+
+    if (paragraph.kind === "table") {
+      renderTableParagraph(paragraph);
       continue;
     }
 
@@ -11851,12 +12739,16 @@ const handleEditorInput = (event) => {
       pageAssist.dataset.pageRepeatAuto = "false";
       pageAssist.dataset.pageRepeatManual = "true";
     }
-    const isHeaderSource =
-      pageAssist.dataset.pageKind === "header" &&
+    const pageAssistKind = normalizePageAssistKind(pageAssist);
+    const isRepeatedPageSource =
+      (pageAssistKind === "header" || pageAssistKind === "footer" || pageAssistKind === "page-number") &&
       String(pageAssist.dataset.pageIndex || "") === "1";
-    if (pageAssist.dataset.pageNumberAuto === "true" && !isHeaderSource) {
+    if (pageAssist.dataset.pageNumberAuto === "true" && !isRepeatedPageSource) {
       delete pageAssist.dataset.pageNumberAuto;
       delete pageAssist.dataset.pageNumberFormat;
+      if (pageAssistKind === "page-number") {
+        pageAssist.dataset.pageNumberManual = "true";
+      }
     }
     if (syncPageAssistVisibility(pageAssist)) {
       scheduleAutoPageBreakGuides();
@@ -11945,7 +12837,7 @@ editor.addEventListener("focusin", (event) => {
   }
   const pageAssist = target.closest(".page-assist");
   if (!(pageAssist instanceof HTMLElement) || !editor.contains(pageAssist)) return;
-  const kind = normalizePageAssistKind(pageAssist);
+  const kind = resolvePageAssistBoundaryKind(pageAssist);
   if (kind === "header" || kind === "footer") {
     scheduleAutoPageBreakGuidesSoft();
   }
@@ -11958,7 +12850,7 @@ editor.addEventListener("focusout", (event) => {
 
   window.requestAnimationFrame(() => {
     if (!pageAssist.isConnected) return;
-    const kind = normalizePageAssistKind(pageAssist);
+    const kind = resolvePageAssistBoundaryKind(pageAssist);
     if (syncPageAssistVisibility(pageAssist)) {
       scheduleAutoPageBreakGuides();
       return;

@@ -384,12 +384,17 @@ body {
   font-weight: 400;
 }
 
+.editor > .page-assist[data-page-kind="page-number"] {
+  line-height: 1.15;
+}
+
 .editor > .page-assist[data-page-kind="note"] {
   font-style: italic;
 }
 
 .editor > .page-assist[data-page-kind="header"][data-page-content-empty="true"],
-.editor > .page-assist[data-page-kind="footer"][data-page-content-empty="true"] {
+.editor > .page-assist[data-page-kind="footer"][data-page-content-empty="true"],
+.editor > .page-assist[data-page-kind="page-number"][data-page-content-empty="true"] {
   display: none;
 }
 
@@ -1421,6 +1426,7 @@ body {
   gap: 4px;
   padding: 8px;
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
   scrollbar-gutter: stable;
   overscroll-behavior: contain;
   border: 1px solid var(--ink);
@@ -1438,9 +1444,11 @@ body {
 .inline-command-menu.is-open {
   opacity: 1;
   transform: translateY(0) scale(1);
+  pointer-events: auto;
 }
 
 .inline-command-item {
+  width: 100%;
   border: 1px solid transparent;
   border-radius: 7px;
   display: flex;
@@ -1448,10 +1456,17 @@ body {
   align-items: center;
   gap: 12px;
   padding: 6px 8px;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
   font-size: 12px;
   line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+  appearance: none;
 }
 
+.inline-command-item:hover,
 .inline-command-item.is-selected {
   border-color: var(--ink);
   background: var(--ink);

@@ -1,4 +1,4 @@
-const CACHE_NAME = "minimal-editor-v80";
+const CACHE_NAME = "minimal-editor-v84";
 const APP_SHELL = [
   "./",
   "./index.html",
